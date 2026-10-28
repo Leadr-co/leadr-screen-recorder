@@ -9,8 +9,15 @@ export type IntegrationInstallationSummary = {
 	id: string;
 	externalId: string;
 	displayName: string;
+	metadata: Record<string, unknown>;
 	createdAt: Date;
 	updatedAt: Date;
+};
+
+export type IntegrationInstallationCredentials = {
+	externalId: string;
+	credentials: unknown;
+	metadata: Record<string, unknown>;
 };
 
 export const saveIntegrationInstallation = async ({
@@ -99,6 +106,7 @@ export const listIntegrationInstallations = async ({
 			id: integrationInstallations.id,
 			externalId: integrationInstallations.externalId,
 			displayName: integrationInstallations.displayName,
+			metadata: integrationInstallations.metadata,
 			createdAt: integrationInstallations.createdAt,
 			updatedAt: integrationInstallations.updatedAt,
 		})
@@ -110,6 +118,38 @@ export const listIntegrationInstallations = async ({
 			),
 		)
 		.orderBy(asc(integrationInstallations.displayName));
+
+export const listIntegrationCredentials = async ({
+	organizationId,
+	provider,
+}: {
+	organizationId: Organisation.OrganisationId;
+	provider: string;
+}): Promise<IntegrationInstallationCredentials[]> => {
+	const installations = await db()
+		.select({
+			externalId: integrationInstallations.externalId,
+			encryptedCredentials: integrationInstallations.encryptedCredentials,
+			metadata: integrationInstallations.metadata,
+		})
+		.from(integrationInstallations)
+		.where(
+			and(
+				eq(integrationInstallations.organizationId, organizationId),
+				eq(integrationInstallations.provider, provider),
+			),
+		)
+		.orderBy(asc(integrationInstallations.createdAt));
+	return Promise.all(
+		installations.map(async (installation) => ({
+			externalId: installation.externalId,
+			credentials: JSON.parse(
+				await decrypt(installation.encryptedCredentials),
+			) as unknown,
+			metadata: installation.metadata,
+		})),
+	);
+};
 
 export const getIntegrationCredentials = async ({
 	provider,

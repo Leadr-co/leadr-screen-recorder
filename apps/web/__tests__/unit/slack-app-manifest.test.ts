@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { SLACK_BOT_SCOPES } from "@/lib/slack/scopes";
 
 type SlackAppManifest = {
 	display_information: {
@@ -8,6 +9,7 @@ type SlackAppManifest = {
 		background_color: string;
 	};
 	features: {
+		app_home: Record<string, boolean>;
 		unfurl_domains: string[];
 	};
 	oauth_config: {
@@ -25,7 +27,7 @@ type SlackAppManifest = {
 };
 
 describe("Slack app manifest", () => {
-	it("declares the complete and minimal video unfurl contract", () => {
+	it("declares the complete and minimal unfurl and owner DM contract", () => {
 		const manifest = JSON.parse(
 			readFileSync(join(process.cwd(), "slack-app-manifest.json"), "utf8"),
 		) as SlackAppManifest;
@@ -35,11 +37,20 @@ describe("Slack app manifest", () => {
 			background_color: "#ab2c21",
 		});
 		expect(manifest.features.unfurl_domains).toEqual(["record.leadr.co"]);
+		expect(manifest.features.app_home).toEqual({
+			home_tab_enabled: false,
+			messages_tab_enabled: true,
+			messages_tab_read_only_enabled: true,
+		});
 		expect(manifest.oauth_config.scopes.bot).toEqual([
 			"links:read",
 			"links:write",
 			"links.embed:write",
+			"chat:write",
+			"users:read",
+			"users:read.email",
 		]);
+		expect(manifest.oauth_config.scopes.bot).toEqual([...SLACK_BOT_SCOPES]);
 		expect(manifest.oauth_config.redirect_urls).toEqual([
 			"https://record.leadr.co/api/integrations/slack/callback",
 		]);

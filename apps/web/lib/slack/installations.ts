@@ -3,9 +3,11 @@ import {
 	deleteIntegrationInstallation,
 	deleteIntegrationInstallationByExternalId,
 	getIntegrationCredentials,
+	listIntegrationCredentials,
 	listIntegrationInstallations,
 	saveIntegrationInstallation,
 } from "@/lib/integrations/installations";
+import { missingSlackDirectMessageScopes, parseSlackScopes } from "./scopes";
 
 const SLACK_PROVIDER = "slack";
 
@@ -13,8 +15,27 @@ export type SlackInstallationSummary = {
 	id: string;
 	teamId: string;
 	teamName: string;
+	missingScopes: string[];
 	createdAt: Date;
 	updatedAt: Date;
+};
+
+export type SlackInstallationAccess = {
+	teamId: string;
+	accessToken: string;
+	scopes: string[];
+};
+
+const readAccessToken = (credentials: unknown) => {
+	if (
+		!credentials ||
+		typeof credentials !== "object" ||
+		Array.isArray(credentials) ||
+		typeof (credentials as { accessToken?: unknown }).accessToken !== "string"
+	) {
+		throw new Error("Slack installation credentials are invalid");
+	}
+	return (credentials as { accessToken: string }).accessToken;
 };
 
 export const saveSlackInstallation = async ({
@@ -46,10 +67,7 @@ export const saveSlackInstallation = async ({
 		metadata: {
 			enterpriseId,
 			botUserId,
-			scopes: scope
-				.split(",")
-				.map((value) => value.trim())
-				.filter(Boolean),
+			scopes: parseSlackScopes(scope),
 		},
 	});
 };
@@ -65,6 +83,9 @@ export const listSlackInstallations = async (
 			id: installation.id,
 			teamId: installation.externalId,
 			teamName: installation.displayName,
+			missingScopes: missingSlackDirectMessageScopes(
+				parseSlackScopes(installation.metadata?.scopes),
+			),
 			createdAt: installation.createdAt,
 			updatedAt: installation.updatedAt,
 		})),
@@ -76,15 +97,22 @@ export const getSlackInstallationToken = async (teamId: string) => {
 		externalId: teamId,
 	});
 	if (credentials === null) return null;
-	if (
-		typeof credentials !== "object" ||
-		Array.isArray(credentials) ||
-		typeof (credentials as { accessToken?: unknown }).accessToken !== "string"
-	) {
-		throw new Error("Slack installation credentials are invalid");
-	}
-	return (credentials as { accessToken: string }).accessToken;
+	return readAccessToken(credentials);
 };
+
+export const listSlackInstallationAccess = async (
+	organizationId: Organisation.OrganisationId,
+): Promise<SlackInstallationAccess[]> =>
+	listIntegrationCredentials({
+		organizationId,
+		provider: SLACK_PROVIDER,
+	}).then((installations) =>
+		installations.map((installation) => ({
+			teamId: installation.externalId,
+			accessToken: readAccessToken(installation.credentials),
+			scopes: parseSlackScopes(installation.metadata?.scopes),
+		})),
+	);
 
 export const deleteSlackInstallation = async ({
 	organizationId,

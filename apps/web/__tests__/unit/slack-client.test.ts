@@ -2,7 +2,10 @@ import { describe, expect, it, vi } from "vitest";
 import {
 	buildSlackInstallUrl,
 	exchangeSlackOAuthCode,
+	lookupSlackUserIdByEmail,
+	postSlackMessage,
 	SLACK_BOT_SCOPES,
+	SlackApiError,
 	type SlackUnfurlError,
 	sendSlackUnfurl,
 } from "@/lib/slack/client";
@@ -78,6 +81,119 @@ describe("Slack API client", () => {
 				fetchImpl: fetchImpl as unknown as typeof fetch,
 			}),
 		).rejects.toThrow("missing required unfurl scopes");
+	});
+
+	it("requests DM scopes but still accepts installs that only granted unfurl scopes", async () => {
+		expect(SLACK_BOT_SCOPES).toEqual([
+			"links:read",
+			"links:write",
+			"links.embed:write",
+			"chat:write",
+			"users:read",
+			"users:read.email",
+		]);
+		const fetchImpl = vi.fn(async () =>
+			slackResponse("links:read,links:write,links.embed:write"),
+		);
+
+		await expect(
+			exchangeSlackOAuthCode({
+				code: "oauth-code",
+				config,
+				fetchImpl: fetchImpl as unknown as typeof fetch,
+			}),
+		).resolves.toMatchObject({
+			scope: "links:read,links:write,links.embed:write",
+		});
+	});
+
+	it("resolves Slack users by email and treats unknown or inactive users as absent", async () => {
+		const respond = (body: unknown) =>
+			vi.fn(
+				async () =>
+					new Response(JSON.stringify(body), {
+						status: 200,
+						headers: { "Content-Type": "application/json" },
+					}),
+			);
+		const found = respond({ ok: true, user: { id: "U123" } });
+		await expect(
+			lookupSlackUserIdByEmail({
+				token: "xoxb-token",
+				email: "owner+demo@leadr.co",
+				fetchImpl: found as unknown as typeof fetch,
+			}),
+		).resolves.toBe("U123");
+		expect(found).toHaveBeenCalledWith(
+			"https://slack.com/api/users.lookupByEmail?email=owner%2Bdemo%40leadr.co",
+			expect.objectContaining({
+				method: "GET",
+				headers: { Authorization: "Bearer xoxb-token" },
+			}),
+		);
+
+		for (const body of [
+			{ ok: false, error: "users_not_found" },
+			{ ok: true, user: { id: "U123", deleted: true } },
+			{ ok: true, user: { id: "B123", is_bot: true } },
+		]) {
+			await expect(
+				lookupSlackUserIdByEmail({
+					token: "xoxb-token",
+					email: "owner@leadr.co",
+					fetchImpl: respond(body) as unknown as typeof fetch,
+				}),
+			).resolves.toBeNull();
+		}
+
+		await expect(
+			lookupSlackUserIdByEmail({
+				token: "xoxb-token",
+				email: "owner@leadr.co",
+				fetchImpl: respond({
+					ok: false,
+					error: "missing_scope",
+				}) as unknown as typeof fetch,
+			}),
+		).rejects.toMatchObject({ code: "missing_scope" });
+	});
+
+	it("posts DMs without unfurling and surfaces Slack errors", async () => {
+		const fetchImpl = vi
+			.fn()
+			.mockResolvedValueOnce(
+				new Response(JSON.stringify({ ok: true }), { status: 200 }),
+			)
+			.mockResolvedValueOnce(
+				new Response(
+					JSON.stringify({ ok: false, error: "channel_not_found" }),
+					{ status: 200 },
+				),
+			);
+
+		await postSlackMessage({
+			token: "xoxb-token",
+			channel: "U123",
+			text: "hello",
+			fetchImpl: fetchImpl as unknown as typeof fetch,
+		});
+		const [url, init] = fetchImpl.mock.calls[0] as [string, RequestInit];
+		expect(url).toBe("https://slack.com/api/chat.postMessage");
+		expect(JSON.parse(String(init.body))).toEqual({
+			channel: "U123",
+			text: "hello",
+			unfurl_links: false,
+			unfurl_media: false,
+		});
+
+		const failure = postSlackMessage({
+			token: "xoxb-token",
+			channel: "U123",
+			text: "hello",
+			fetchImpl: fetchImpl as unknown as typeof fetch,
+		});
+		await expect(failure).rejects.toBeInstanceOf(SlackApiError);
+		await expect(failure).rejects.toThrow("channel_not_found");
 	});
 
 	it("retries transient unfurl failures with the stable event locator", async () => {

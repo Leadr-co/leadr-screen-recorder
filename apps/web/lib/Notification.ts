@@ -10,6 +10,7 @@ import { Comment, User, Video } from "@cap/web-domain";
 import { and, eq, gte, inArray, isNull, ne, or, sql } from "drizzle-orm";
 import type { UserPreferences } from "@/app/(org)/dashboard/dashboard-data";
 import { getSessionHash } from "@/lib/anonymous-names";
+import { queueSlackActivityNotification } from "@/lib/slack/activity-notifications";
 
 export type NotificationType = Notification["type"];
 
@@ -235,7 +236,22 @@ export async function createNotification(
 			videoId: notification.videoId,
 		});
 
+		if (type === "view") {
+			queueSlackActivityNotification({
+				type: "view",
+				videoId: notification.videoId,
+				actorUserId: notification.authorId,
+			});
+		}
+
 		if (type === "comment") {
+			queueSlackActivityNotification({
+				type: "comment",
+				videoId: notification.videoId,
+				actorUserId: notification.authorId,
+				commentId: notification.comment.id,
+				content: notification.comment.content,
+			});
 			await sendNewCommentEmail({
 				videoId: notification.videoId,
 				recipientId: videoResult.ownerId,
@@ -399,6 +415,12 @@ export async function createAnonymousViewNotification({
 			data: { videoId, anonName, location },
 			videoId,
 			dedupKey,
+		});
+
+		queueSlackActivityNotification({
+			type: "view",
+			videoId,
+			actorUserId: null,
 		});
 	} catch (error) {
 		if (isDuplicateEntryError(error)) return;

@@ -79,6 +79,7 @@ import {
 	deleteIntegrationInstallation,
 	deleteIntegrationInstallationByExternalId,
 	getIntegrationCredentials,
+	listIntegrationCredentials,
 	listIntegrationInstallations,
 	saveIntegrationInstallation,
 } from "@/lib/integrations/installations";
@@ -206,6 +207,31 @@ describe("integration installation repository", () => {
 			}),
 		).resolves.toEqual(rows);
 		expect(databaseMocks.orderBy).toHaveBeenCalledOnce();
+	});
+
+	it("decrypts every installation credential for one organization", async () => {
+		databaseMocks.state.rows = [
+			{
+				externalId: "T123",
+				encryptedCredentials: "encrypted-credentials",
+				metadata: { scopes: ["chat:write"] },
+			},
+		];
+		cryptoMocks.decrypt.mockResolvedValue(
+			JSON.stringify({ accessToken: "xoxb-token" }),
+		);
+
+		await expect(
+			listIntegrationCredentials({ organizationId, provider: "slack" }),
+		).resolves.toEqual([
+			{
+				externalId: "T123",
+				credentials: { accessToken: "xoxb-token" },
+				metadata: { scopes: ["chat:write"] },
+			},
+		]);
+		expect(cryptoMocks.decrypt).toHaveBeenCalledWith("encrypted-credentials");
+		expect(databaseMocks.orderBy).toHaveBeenCalled();
 	});
 
 	it("decrypts and parses credentials only after an exact lookup", async () => {

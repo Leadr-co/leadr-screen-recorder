@@ -12,6 +12,7 @@ type SlackInstallation = {
 	id: string;
 	teamId: string;
 	teamName: string;
+	missingScopes: string[];
 };
 
 const resultMessages: Record<
@@ -101,7 +102,8 @@ export function SlackIntegration({
 				<div className="flex-1 min-w-0">
 					<p className="text-[13px] font-medium text-gray-12">Slack</p>
 					<p className="text-[11px] text-gray-9">
-						Play public recordings directly inside Slack.
+						Play public recordings inside Slack and get a DM when someone views
+						or comments on your recording.
 					</p>
 				</div>
 				<span
@@ -132,18 +134,31 @@ export function SlackIntegration({
 										{installation.teamName}
 									</p>
 									<p className="truncate text-[10px] text-gray-9">
-										{installation.teamId}
+										{installation.missingScopes.length > 0
+											? "Reconnect to enable view and comment DMs"
+											: installation.teamId}
 									</p>
 								</div>
-								<Button
-									type="button"
-									size="xs"
-									variant="destructive"
-									disabled={isPending}
-									onClick={() => disconnect(installation)}
-								>
-									Disconnect
-								</Button>
+								<div className="flex shrink-0 items-center gap-2">
+									{configured && installation.missingScopes.length > 0 && (
+										<Button
+											href="/api/integrations/slack/install"
+											size="xs"
+											disabled={isPending}
+										>
+											Reconnect
+										</Button>
+									)}
+									<Button
+										type="button"
+										size="xs"
+										variant="destructive"
+										disabled={isPending}
+										onClick={() => disconnect(installation)}
+									>
+										Disconnect
+									</Button>
+								</div>
 							</div>
 						))}
 					</div>
