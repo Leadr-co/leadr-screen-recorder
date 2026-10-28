@@ -22,6 +22,7 @@ import {
 	getGoogleDriveRateLimitDelayMs,
 	getGoogleDriveRecordingDownload,
 	getGoogleDriveRecordingResponse,
+	getGoogleDriveUserFolderName,
 	syncGoogleDriveVideoNames,
 } from "../../../../packages/web-backend/src/Storage/GoogleDrive";
 import { getGoogleDriveVideoNames } from "../../../../packages/web-backend/src/Storage/google-drive-names";
@@ -76,6 +77,10 @@ type RepoHarness = {
 	fileNameUpdates: Array<{ object: StoredObject; fileName: string }>;
 	putObject: (input: StorageObjectInput) => StoredObject;
 	setVideo: (video: VideoForNameSync) => void;
+	setFolderUser: (
+		userId: string,
+		user: { name: string | null; lastName: string | null; email: string },
+	) => void;
 	setFileNameUpdateResult: (
 		result: (object: StoredObject, fileName: string) => boolean,
 	) => void;
@@ -101,6 +106,10 @@ const makeRepoHarness = (videos: VideoForNameSync[] = []): RepoHarness => {
 		[];
 	const fileNameUpdates: Array<{ object: StoredObject; fileName: string }> = [];
 	const videoMap = new Map(videos.map((video) => [video.id, video]));
+	const folderUsers = new Map<
+		string,
+		{ name: string | null; lastName: string | null; email: string }
+	>();
 	let objectSequence = 0;
 	let fileNameUpdateResult: (
 		object: StoredObject,
@@ -171,6 +180,8 @@ const makeRepoHarness = (videos: VideoForNameSync[] = []): RepoHarness => {
 			),
 		getVideoForNameSync: (id: Video.VideoId) =>
 			Effect.succeed(Option.fromNullable(videoMap.get(id))),
+		getUserForFolderName: (id: string) =>
+			Effect.succeed(Option.fromNullable(folderUsers.get(id))),
 		reserveObject: (input: StorageObjectInput) =>
 			Effect.sync(() => {
 				reservations.push(input);
@@ -258,6 +269,9 @@ const makeRepoHarness = (videos: VideoForNameSync[] = []): RepoHarness => {
 		putObject,
 		setVideo: (video) => {
 			videoMap.set(video.id, video);
+		},
+		setFolderUser: (userId, user) => {
+			folderUsers.set(userId, user);
 		},
 		setFileNameUpdateResult: (result) => {
 			fileNameUpdateResult = result;
@@ -730,6 +744,95 @@ describe("Google Drive video names", () => {
 			});
 		},
 	);
+
+	it("names each rep's folder after the person, keeping the user id as its key", async () => {
+		const harness = makeRepoHarness();
+		harness.setFolderUser(videoOwnerId, {
+			name: "Brian",
+			lastName: "Jones",
+			email: "brian@leadr.co",
+		});
+		const generatedIds = [
+			"result-id",
+			"owner-folder-id",
+			"video-folder-id",
+			"warning-id",
+		];
+		const folderBodies: Record<string, unknown>[] = [];
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+				const url = String(input);
+				if (url.includes("/files/generateIds")) {
+					return jsonResponse({ ids: [generatedIds.shift()] });
+				}
+				if (
+					url.includes("/drive/v3/files?") &&
+					!url.includes("uploadType=") &&
+					init?.method === "POST"
+				) {
+					const body = requestBody(init);
+					if (body) folderBodies.push(body);
+					return jsonResponse({ id: body?.id, name: body?.name });
+				}
+				if (url.includes("uploadType=multipart")) {
+					return jsonResponse({ id: "warning-id" });
+				}
+				if (url.includes("uploadType=resumable") && init?.method === "POST") {
+					return response(200, { Location: "https://upload.test/session" });
+				}
+				throw new Error(
+					`Unexpected Drive request: ${init?.method ?? "GET"} ${url}`,
+				);
+			}),
+		);
+
+		await Effect.runPromise(
+			createGoogleDriveResumableUpload(
+				harness.repo,
+				makeConfig("userVideo"),
+				{
+					integrationId,
+					ownerId: integrationOwnerId,
+					videoId,
+					key: resultKey,
+					contentType: "video/mp4",
+					videoTitle: "Pricing bug",
+				},
+				makeTokenStore(),
+			),
+		);
+
+		const folderNames = folderBodies
+			.filter((body) => body.mimeType === GOOGLE_DRIVE_FOLDER_MIME_TYPE)
+			.map((body) => body.name);
+		expect(folderNames).toEqual([
+			"Brian Jones (brian@leadr.co)",
+			"Pricing bug",
+		]);
+		expect(
+			harness.objects.has(
+				objectMapKey(integrationId, `.cap-folders/${videoOwnerId}`),
+			),
+		).toBe(true);
+	});
+
+	it("falls back to the email, then the user id, for a rep's folder name", () => {
+		expect(
+			getGoogleDriveUserFolderName({
+				name: "  ",
+				lastName: null,
+				email: "rep@leadr.co",
+			}),
+		).toBe("rep@leadr.co");
+		expect(
+			getGoogleDriveUserFolderName({
+				name: "Bad\u0007name",
+				lastName: null,
+				email: "rep@leadr.co",
+			}),
+		).toBeNull();
+	});
 
 	it("uses a matching video owner and integration for final names but leaves auxiliary and mismatched objects alone", async () => {
 		const matching = makeRepoHarness([
