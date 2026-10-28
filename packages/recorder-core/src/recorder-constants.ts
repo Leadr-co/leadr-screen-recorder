@@ -18,6 +18,40 @@ export const DISPLAY_MEDIA_VIDEO_CONSTRAINTS: MediaTrackConstraints = {
 	height: { ideal: DISPLAY_MEDIA_IDEAL.height },
 };
 
+export type RecordingQuality = "auto" | "2160p" | "1440p" | "1080p";
+
+export const DEFAULT_RECORDING_QUALITY: RecordingQuality = "auto";
+
+export const RECORDING_QUALITY_OPTIONS: ReadonlyArray<{
+	value: RecordingQuality;
+	label: string;
+	maxWidth: number;
+	maxHeight: number;
+}> = [
+	{ value: "auto", label: "Auto", maxWidth: 3840, maxHeight: 2160 },
+	{ value: "2160p", label: "4K", maxWidth: 3840, maxHeight: 2160 },
+	{ value: "1440p", label: "1440p", maxWidth: 2560, maxHeight: 1440 },
+	{ value: "1080p", label: "1080p", maxWidth: 1920, maxHeight: 1080 },
+];
+
+export const isRecordingQuality = (value: unknown): value is RecordingQuality =>
+	RECORDING_QUALITY_OPTIONS.some((option) => option.value === value);
+
+// Only caps, never ideals: Chrome captures the screen at its native size and
+// scales down to fit, so a 1440p monitor on "4K" still records 1440p.
+export const displayMediaVideoConstraintsForQuality = (
+	quality: RecordingQuality,
+): MediaTrackConstraints => {
+	const option =
+		RECORDING_QUALITY_OPTIONS.find((entry) => entry.value === quality) ??
+		RECORDING_QUALITY_OPTIONS[0];
+	return {
+		frameRate: { ideal: DISPLAY_MEDIA_IDEAL.frameRate },
+		width: { max: option.maxWidth },
+		height: { max: option.maxHeight },
+	};
+};
+
 export type ExtendedDisplayMediaStreamOptions = DisplayMediaStreamOptions & {
 	monitorTypeSurfaces?: "include" | "exclude";
 	surfaceSwitching?: "include" | "exclude";

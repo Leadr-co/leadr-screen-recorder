@@ -23,6 +23,7 @@ import type {
 import {
 	detectCapabilities,
 	getMediaRecorderOptions,
+	getVideoBitsPerSecond,
 	openShareUrlInNewTab,
 	type RecorderCapabilities,
 	type RecordingPipeline,
@@ -54,8 +55,10 @@ import { useRecordingTimer } from "./useRecordingTimer";
 import { useStreamManagement } from "./useStreamManagement";
 import { useSurfaceDetection } from "./useSurfaceDetection";
 import {
+	DEFAULT_RECORDING_QUALITY,
 	type DetectedDisplayRecordingMode,
 	FREE_PLAN_MAX_RECORDING_MS,
+	type RecordingQuality,
 } from "./web-recorder-constants";
 
 interface UseWebRecorderOptions {
@@ -63,6 +66,7 @@ interface UseWebRecorderOptions {
 	selectedMicId: string | null;
 	micEnabled: boolean;
 	systemAudioEnabled: boolean;
+	recordingQuality?: RecordingQuality;
 	recordingMode: RecordingMode;
 	selectedCameraId: string | null;
 	isProUser: boolean;
@@ -126,6 +130,7 @@ export const useWebRecorder = ({
 	selectedMicId,
 	micEnabled,
 	systemAudioEnabled,
+	recordingQuality = DEFAULT_RECORDING_QUALITY,
 	recordingMode,
 	selectedCameraId,
 	isProUser,
@@ -923,6 +928,7 @@ export const useWebRecorder = ({
 				videoStream = await acquireDisplayStream({
 					mode: recordingMode as DetectedDisplayRecordingMode,
 					systemAudioEnabled,
+					quality: recordingQuality,
 					onSystemAudioFallback: () => {
 						toast.warning(
 							"System audio isn't supported in this browser. Recording without it.",
@@ -1100,7 +1106,10 @@ export const useWebRecorder = ({
 			}
 			const recorder = new MediaRecorder(
 				mixedStream,
-				getMediaRecorderOptions(pipeline.mimeType),
+				getMediaRecorderOptions(
+					pipeline.mimeType,
+					getVideoBitsPerSecond(dimensionsRef.current),
+				),
 			);
 			recorder.ondataavailable = handleRecorderDataAvailable;
 			recorder.onstop = onRecorderStop;

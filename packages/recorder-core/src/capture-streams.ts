@@ -3,8 +3,10 @@ import {
 	DISPLAY_MEDIA_VIDEO_CONSTRAINTS,
 	DISPLAY_MODE_PREFERENCES,
 	type DisplaySurfacePreference,
+	displayMediaVideoConstraintsForQuality,
 	type ExtendedDisplayMediaStreamOptions,
 	RECORDING_MODE_TO_DISPLAY_SURFACE,
+	type RecordingQuality,
 } from "./recorder-constants";
 import {
 	isUserCancellationError,
@@ -67,6 +69,8 @@ export interface AcquireDisplayStreamOptions {
 	 * fired once per fallback, before the retry, so the caller can warn.
 	 */
 	onSystemAudioFallback?: () => void;
+	/** Resolution cap; omit to keep the 1080p ideal used by comment replies. */
+	quality?: RecordingQuality;
 }
 
 /**
@@ -78,12 +82,15 @@ export const acquireDisplayStream = async ({
 	mode,
 	systemAudioEnabled,
 	onSystemAudioFallback,
+	quality,
 }: AcquireDisplayStreamOptions): Promise<MediaStream> => {
 	const desiredSurface = mode ? RECORDING_MODE_TO_DISPLAY_SURFACE[mode] : null;
 	const videoConstraints: MediaTrackConstraints & {
 		displaySurface?: DisplaySurfacePreference;
 	} = {
-		...DISPLAY_MEDIA_VIDEO_CONSTRAINTS,
+		...(quality
+			? displayMediaVideoConstraintsForQuality(quality)
+			: DISPLAY_MEDIA_VIDEO_CONSTRAINTS),
 		// undefined dictionary members are treated as absent by the constraint
 		// algorithm, so the generic-picker path adds no surface preference.
 		displaySurface: desiredSurface ?? undefined,

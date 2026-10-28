@@ -1,11 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import {
+	DEFAULT_RECORDING_QUALITY,
+	isRecordingQuality,
+	type RecordingQuality,
+} from "./web-recorder-constants";
 
 export const REMEMBER_DEVICES_KEY = "cap-web-recorder-remember-devices";
 export const PREFERRED_CAMERA_KEY = "cap-web-recorder-preferred-camera";
 export const PREFERRED_MICROPHONE_KEY = "cap-web-recorder-preferred-microphone";
 const SYSTEM_AUDIO_ENABLED_KEY = "cap-web-recorder-system-audio";
+export const RECORDING_QUALITY_KEY = "cap-web-recorder-quality";
 
 interface DevicePreferencesOptions {
 	open: boolean;
@@ -22,6 +28,9 @@ export const useDevicePreferences = ({
 	const [selectedCameraId, setSelectedCameraId] = useState<string | null>(null);
 	const [selectedMicId, setSelectedMicId] = useState<string | null>(null);
 	const [systemAudioEnabled, setSystemAudioEnabled] = useState(false);
+	const [recordingQuality, setRecordingQuality] = useState<RecordingQuality>(
+		DEFAULT_RECORDING_QUALITY,
+	);
 
 	useEffect(() => {
 		if (typeof window === "undefined") return;
@@ -36,6 +45,10 @@ export const useDevicePreferences = ({
 			);
 			if (storedSystemAudio === "true") {
 				setSystemAudioEnabled(true);
+			}
+			const storedQuality = window.localStorage.getItem(RECORDING_QUALITY_KEY);
+			if (isRecordingQuality(storedQuality)) {
+				setRecordingQuality(storedQuality);
 			}
 		} catch (error) {
 			console.error("Failed to load recorder preferences", error);
@@ -132,6 +145,20 @@ export const useDevicePreferences = ({
 		}
 	};
 
+	const handleRecordingQualityChange = (quality: RecordingQuality) => {
+		setRecordingQuality(quality);
+
+		if (typeof window === "undefined") {
+			return;
+		}
+
+		try {
+			window.localStorage.setItem(RECORDING_QUALITY_KEY, quality);
+		} catch (error) {
+			console.error("Failed to persist recording quality", error);
+		}
+	};
+
 	const handleRememberDevicesChange = (next: boolean) => {
 		setRememberDevices(next);
 
@@ -171,11 +198,13 @@ export const useDevicePreferences = ({
 		selectedCameraId,
 		selectedMicId,
 		systemAudioEnabled,
+		recordingQuality,
 		setSelectedCameraId,
 		setSelectedMicId,
 		handleCameraChange,
 		handleMicChange,
 		handleSystemAudioChange,
+		handleRecordingQualityChange,
 		handleRememberDevicesChange,
 	};
 };

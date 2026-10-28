@@ -1,5 +1,7 @@
 import {
 	describeRecordingCodecs,
+	getMediaRecorderOptions,
+	getVideoBitsPerSecond,
 	openShareUrlInNewTab,
 	selectRecordingPipelineFromSupport,
 	shouldPreferStreamingUpload,
@@ -196,5 +198,36 @@ describe("openShareUrlInNewTab", () => {
 		expect(openShareUrlInNewTab(null)).toBe(false);
 		expect(openShareUrlInNewTab(undefined)).toBe(false);
 		expect(openShareUrlInNewTab("")).toBe(false);
+	});
+});
+
+describe("getVideoBitsPerSecond", () => {
+	it("scales with resolution so 4K gets more bits than 1080p", () => {
+		expect(getVideoBitsPerSecond({ width: 1920, height: 1080, fps: 30 })).toBe(
+			4_976_640,
+		);
+		expect(getVideoBitsPerSecond({ width: 2560, height: 1440, fps: 30 })).toBe(
+			8_847_360,
+		);
+		expect(getVideoBitsPerSecond({ width: 3840, height: 2160, fps: 30 })).toBe(
+			19_906_560,
+		);
+	});
+
+	it("clamps to a floor and a ceiling and assumes 30 fps when unknown", () => {
+		expect(getVideoBitsPerSecond({ width: 640, height: 360 })).toBe(2_500_000);
+		expect(getVideoBitsPerSecond({ width: 5120, height: 2880, fps: 60 })).toBe(
+			20_000_000,
+		);
+	});
+
+	it("leaves the browser default when the size is unknown", () => {
+		expect(getVideoBitsPerSecond({})).toBeUndefined();
+		expect(getMediaRecorderOptions("video/webm")).not.toHaveProperty(
+			"videoBitsPerSecond",
+		);
+		expect(
+			getMediaRecorderOptions("video/webm", 8_000_000).videoBitsPerSecond,
+		).toBe(8_000_000);
 	});
 });

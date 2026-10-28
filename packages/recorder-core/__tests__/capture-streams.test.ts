@@ -64,6 +64,38 @@ describe("acquireDisplayStream", () => {
 		});
 	});
 
+	it("caps the capture at the chosen quality without asking for an upscale", async () => {
+		const getDisplayMedia = stubDisplayMedia(async () => ({ id: "display" }));
+
+		await acquireDisplayStream({
+			mode: "fullscreen",
+			systemAudioEnabled: false,
+			quality: "1440p",
+		});
+
+		const video = (
+			getDisplayMedia.mock.calls[0]?.[0] as DisplayMediaStreamOptions
+		).video as MediaTrackConstraints;
+		expect(video.width).toEqual({ max: 2560 });
+		expect(video.height).toEqual({ max: 1440 });
+		expect(video.frameRate).toEqual({ ideal: 30 });
+	});
+
+	it("records up to 4K on auto and keeps the 1080p ideal when no quality is given", async () => {
+		const getDisplayMedia = stubDisplayMedia(async () => ({ id: "display" }));
+
+		await acquireDisplayStream({ systemAudioEnabled: false, quality: "auto" });
+		await acquireDisplayStream({ systemAudioEnabled: false });
+
+		const [auto, legacy] = getDisplayMedia.mock.calls.map(
+			(call) =>
+				(call[0] as DisplayMediaStreamOptions).video as MediaTrackConstraints,
+		);
+		expect(auto?.width).toEqual({ max: 3840 });
+		expect(auto?.height).toEqual({ max: 2160 });
+		expect(legacy?.width).toEqual({ ideal: 1920 });
+	});
+
 	it("shows the generic picker when no mode is given", async () => {
 		const getDisplayMedia = stubDisplayMedia(async () => ({ id: "display" }));
 
