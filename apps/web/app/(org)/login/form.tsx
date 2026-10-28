@@ -1,5 +1,6 @@
 "use client";
 
+import { buildEnv } from "@cap/env";
 import { Button, Input, LogoBadge } from "@cap/ui";
 import {
 	faArrowLeft,
@@ -467,29 +468,31 @@ export function LoginForm() {
 								)}
 							</motion.div>
 						</AnimatePresence>
-						<motion.p
-							layout="position"
-							className="pt-3 text-xs text-center text-gray-9"
-						>
-							By typing your email and clicking continue, you acknowledge that
-							you have both read and agree to the{" "}
-							<Link
-								href="/terms"
-								target="_blank"
-								className="text-xs font-semibold text-gray-12 hover:text-blue-300"
+						{buildEnv.NEXT_PUBLIC_IS_CAP && (
+							<motion.p
+								layout="position"
+								className="pt-3 text-xs text-center text-gray-9"
 							>
-								Terms of Service
-							</Link>{" "}
-							and{" "}
-							<Link
-								href="/privacy"
-								target="_blank"
-								className="text-xs font-semibold text-gray-12 hover:text-blue-300"
-							>
-								Privacy Policy
-							</Link>
-							.
-						</motion.p>
+								By typing your email and clicking continue, you acknowledge that
+								you have both read and agree to the{" "}
+								<Link
+									href="/terms"
+									target="_blank"
+									className="text-xs font-semibold text-gray-12 hover:text-blue-300"
+								>
+									Terms of Service
+								</Link>{" "}
+								and{" "}
+								<Link
+									href="/privacy"
+									target="_blank"
+									className="text-xs font-semibold text-gray-12 hover:text-blue-300"
+								>
+									Privacy Policy
+								</Link>
+								.
+							</motion.p>
+						)}
 					</motion.div>
 				</Suspense>
 			</motion.div>
@@ -584,7 +587,7 @@ const NormalLogin = ({
 					name="email"
 					autoFocus
 					type="email"
-					placeholder={emailSent ? "" : "tim@apple.com"}
+					placeholder={emailSent ? "" : "you@leadr.co"}
 					autoComplete="email"
 					required
 					value={email}
