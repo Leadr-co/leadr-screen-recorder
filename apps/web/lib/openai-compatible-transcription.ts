@@ -10,6 +10,9 @@ import type { AssemblyAIEditWord } from "@/lib/edit-transcript";
 
 export const DEFAULT_TRANSCRIPTION_MODEL = "whisper-large-v3-turbo";
 export const DEFAULT_TRANSCRIPTION_MAX_UPLOAD_MB = 25;
+// Whisper resamples to 16 kHz mono, so 48 kbps loses nothing and fits ~70
+// minutes under the 25 MB cap instead of ~27 at the 128 kbps default.
+export const OPENAI_COMPATIBLE_AUDIO_BITRATE = "48k";
 
 const BYTES_PER_MB = 1024 * 1024;
 const MAX_ERROR_DETAIL_LENGTH = 500;

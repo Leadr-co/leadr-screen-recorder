@@ -46,7 +46,10 @@ import {
 	isMediaServerConfigured,
 	probeVideoViaMediaServer,
 } from "@/lib/media-client";
-import { transcribeWithOpenAICompatible } from "@/lib/openai-compatible-transcription";
+import {
+	OPENAI_COMPATIBLE_AUDIO_BITRATE,
+	transcribeWithOpenAICompatible,
+} from "@/lib/openai-compatible-transcription";
 import { planSegmentsAudioExtraction } from "@/lib/segments-audio";
 import { downloadConcatenatedSegments } from "@/lib/segments-audio-download";
 import {
@@ -574,7 +577,12 @@ async function extractAudio(
 			return null;
 		}
 
-		audioBuffer = await extractAudioViaMediaServer(videoUrl);
+		audioBuffer = await extractAudioViaMediaServer(
+			videoUrl,
+			getTranscriptionProvider() === "openai-compatible"
+				? { bitrate: OPENAI_COMPATIBLE_AUDIO_BITRATE }
+				: {},
+		);
 	} else {
 		hasAudio = await checkHasAudioTrack(videoUrl);
 		console.log(

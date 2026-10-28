@@ -1,5 +1,6 @@
 "use client";
 
+import { buildEnv } from "@cap/env";
 import { Button } from "@cap/ui";
 import { faDownload } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -18,7 +19,9 @@ interface EmptyCapStateProps {
 export const EmptyCapState: React.FC<EmptyCapStateProps> = ({ userName }) => {
 	const { theme } = useTheme();
 	const { isChromeBrowser, isInstalled } = useCapChromeExtension();
-	const showChromeButton = isChromeBrowser || isInstalled;
+	// Stock Cap's desktop app and Chrome extension sign in to cap.so, not this server.
+	const showCapApps = Boolean(buildEnv.NEXT_PUBLIC_IS_CAP);
+	const showChromeButton = showCapApps && (isChromeBrowser || isInstalled);
 	const { RiveComponent: EmptyCap } = useRive({
 		src: "/rive/main.riv",
 		artboard: theme === "light" ? "empty" : "darkempty",
@@ -40,15 +43,19 @@ export const EmptyCapState: React.FC<EmptyCapStateProps> = ({ userName }) => {
 					</p>
 				</div>
 				<div className="flex flex-wrap gap-3 justify-center items-center mt-4">
-					<Button
-						href="/download"
-						className="flex relative gap-2 justify-center items-center"
-						variant="primary"
-					>
-						<FontAwesomeIcon className="size-3.5" icon={faDownload} />
-						Download LEADR Screen Recorder
-					</Button>
-					<p className="text-sm text-gray-10">or</p>
+					{showCapApps && (
+						<>
+							<Button
+								href="/download"
+								className="flex relative gap-2 justify-center items-center"
+								variant="primary"
+							>
+								<FontAwesomeIcon className="size-3.5" icon={faDownload} />
+								Download LEADR Screen Recorder
+							</Button>
+							<p className="text-sm text-gray-10">or</p>
+						</>
+					)}
 					<WebRecorderDialog />
 					{showChromeButton && (
 						<>

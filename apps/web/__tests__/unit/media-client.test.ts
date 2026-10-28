@@ -195,6 +195,23 @@ describe("media-client", () => {
 			);
 		});
 
+		it("asks the media server for the requested bitrate", async () => {
+			mockFetch.mockResolvedValueOnce({
+				ok: true,
+				arrayBuffer: async () => new Uint8Array([1]).buffer,
+			});
+
+			await extractAudioViaMediaServer("https://example.com/video.mp4", {
+				bitrate: "48k",
+			});
+
+			expect(JSON.parse(mockFetch.mock.calls[0]?.[1]?.body)).toEqual({
+				videoUrl: "https://example.com/video.mp4",
+				stream: true,
+				bitrate: "48k",
+			});
+		});
+
 		it("throws NO_AUDIO_TRACK error when video has no audio", async () => {
 			mockFetch.mockResolvedValueOnce({
 				ok: false,

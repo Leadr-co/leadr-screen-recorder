@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
 	deleteObject: vi.fn(),
 	getInternalSignedObjectUrl: vi.fn(),
 	startAiGeneration: vi.fn(),
+	extractAudio: vi.fn(),
 	updates: [] as Record<string, unknown>[],
 }));
 
@@ -151,7 +152,10 @@ vi.mock("@/lib/media-client", () => ({
 		audioChannels: 2,
 		sampleRate: 48_000,
 	}),
-	extractAudioViaMediaServer: async () => Buffer.from("audio"),
+	extractAudioViaMediaServer: async (...args: unknown[]) => {
+		mocks.extractAudio(...args);
+		return Buffer.from("audio");
+	},
 	checkHasAudioTrackViaMediaServer: async () => true,
 }));
 
@@ -213,6 +217,7 @@ describe("transcribeVideoWorkflow", () => {
 
 		expect(result.success).toBe(true);
 		expect(mocks.transcribe).toHaveBeenCalledTimes(1);
+		expect(mocks.extractAudio).toHaveBeenCalledWith(expect.any(String), {});
 		expect(mocks.transcribe.mock.calls[0]?.[0]).toMatchObject({
 			disfluencies: true,
 			speech_models: ["universal-3-5-pro", "universal-2"],
@@ -487,6 +492,9 @@ describe("transcription with an OpenAI-compatible Whisper provider", () => {
 
 		expect(result.success).toBe(true);
 		expect(mocks.transcribe).not.toHaveBeenCalled();
+		expect(mocks.extractAudio).toHaveBeenCalledWith(expect.any(String), {
+			bitrate: "48k",
+		});
 		const posts = whisperFetch.mock.calls.filter(
 			([, init]) => init?.method === "POST",
 		);
