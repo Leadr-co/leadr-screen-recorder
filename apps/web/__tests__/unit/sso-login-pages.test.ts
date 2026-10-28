@@ -16,6 +16,7 @@ vi.mock("@cap/database/auth/session", () => ({
 	getCurrentUser: mocks.getCurrentUser,
 }));
 vi.mock("@cap/env", () => ({
+	buildEnv: { NEXT_PUBLIC_IS_CAP: false },
 	serverEnv: () => ({ WEB_URL: "https://cap.test" }),
 }));
 vi.mock("next/navigation", () => ({

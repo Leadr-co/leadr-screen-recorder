@@ -172,6 +172,28 @@ For the AssemblyAI EU gateway, set
 serves Claude and Gemini models, so you must also override `AI_MODEL` and
 `AI_STREAM_MODEL` (the defaults are OpenAI-family models that are US-only).
 
+#### Transcription with an OpenAI-compatible Whisper API
+
+Instead of AssemblyAI, transcription can use any OpenAI-compatible
+`/audio/transcriptions` endpoint that returns `verbose_json` with word
+timestamps, such as Groq or a self-hosted faster-whisper/speaches server:
+
+```bash
+TRANSCRIPTION_BASE_URL=https://api.groq.com/openai/v1
+TRANSCRIPTION_API_KEY=your-key
+TRANSCRIPTION_MODEL=whisper-large-v3-turbo   # Default
+TRANSCRIPTION_MAX_UPLOAD_MB=25               # Default, Groq's free-tier limit
+```
+
+When `TRANSCRIPTION_PROVIDER` is not set, AssemblyAI is used if
+`ASSEMBLY_API_KEY` is present, otherwise the OpenAI-compatible provider is used
+when both `TRANSCRIPTION_BASE_URL` and `TRANSCRIPTION_API_KEY` are set. For a
+keyless self-hosted server, set `TRANSCRIPTION_PROVIDER=openai-compatible` and
+leave `TRANSCRIPTION_API_KEY` unset. Recordings whose extracted audio is larger
+than `TRANSCRIPTION_MAX_UPLOAD_MB` (about 25 minutes of 128 kbps MP3 at the
+default) fail with a clear error instead of being sent. Live transcription
+during recording remains AssemblyAI-only.
+
 ### Google OAuth
 
 ```bash

@@ -10,7 +10,6 @@ import {
 	videoUploads,
 } from "@cap/database/schema";
 import type { VideoEditSpec, VideoMetadata } from "@cap/database/types";
-import { serverEnv } from "@cap/env";
 import { Storage } from "@cap/web-backend/src/Storage/index";
 import {
 	type AiGenerationLanguage,
@@ -47,8 +46,14 @@ import {
 	isMediaServerConfigured,
 	probeVideoViaMediaServer,
 } from "@/lib/media-client";
+import { transcribeWithOpenAICompatible } from "@/lib/openai-compatible-transcription";
 import { planSegmentsAudioExtraction } from "@/lib/segments-audio";
 import { downloadConcatenatedSegments } from "@/lib/segments-audio-download";
+import {
+	getTranscriptionConfigError,
+	getTranscriptionProvider,
+	isTranscriptionConfigured,
+} from "@/lib/transcription-provider";
 import { decodeStorageVideo } from "@/lib/video-storage";
 import { runWorkflowPromise } from "@/lib/workflow-runtime";
 
@@ -257,8 +262,8 @@ export async function backfillEditTranscriptWorkflow(
 async function validateVideo(videoId: string): Promise<VideoData> {
 	"use step";
 
-	if (!serverEnv().ASSEMBLY_API_KEY) {
-		throw new FatalError("Missing ASSEMBLY_API_KEY");
+	if (!isTranscriptionConfigured()) {
+		throw new FatalError(getTranscriptionConfigError());
 	}
 
 	const query = await db()
@@ -332,8 +337,8 @@ async function validateEditTranscriptBackfill(
 ) {
 	"use step";
 
-	if (!serverEnv().ASSEMBLY_API_KEY) {
-		throw new FatalError("Missing ASSEMBLY_API_KEY");
+	if (!isTranscriptionConfigured()) {
+		throw new FatalError(getTranscriptionConfigError());
 	}
 
 	const [video] = await db()
@@ -784,6 +789,33 @@ async function transcribeWithAssemblyAI(
 	}
 
 	const audioBuffer = Buffer.from(await audioResponse.arrayBuffer());
+
+	if (getTranscriptionProvider() === "openai-compatible") {
+		const result = await transcribeWithOpenAICompatible({
+			audio: audioBuffer,
+			contentType: audioResponse.headers.get("content-type"),
+			language,
+		});
+		console.log(
+			`[transcribe] OpenAI-compatible transcript finished with ${result.words.length} words, model=${result.speech_model_used}, timing=${result.wordTimingSource}`,
+		);
+		if (result.words.length === 0) {
+			throw new FatalError(
+				`OpenAI-compatible transcription found no spoken audio (model=${result.speech_model_used}, language=${language})`,
+			);
+		}
+		const editTranscript = createEditTranscript(
+			result,
+			videoDurationMs > 0
+				? videoDurationMs
+				: (result.audio_duration ?? 0) * 1000,
+		);
+		return {
+			vtt: editTranscriptWordsToCaptionVtt(editTranscript.words),
+			editTranscript: serializeEditTranscript(editTranscript),
+		};
+	}
+
 	const client = createAssemblyAIClient();
 
 	const transcript = await client.transcripts.transcribe({
@@ -835,6 +867,26 @@ async function transcribeEditTranscriptWithAssemblyAI(
 	}
 
 	const audioBuffer = Buffer.from(await audioResponse.arrayBuffer());
+
+	if (getTranscriptionProvider() === "openai-compatible") {
+		const result = await transcribeWithOpenAICompatible({
+			audio: audioBuffer,
+			contentType: audioResponse.headers.get("content-type"),
+			language: "auto",
+		});
+		console.log(
+			`[transcribe] OpenAI-compatible editable transcript finished with ${result.words.length} words, model=${result.speech_model_used}, timing=${result.wordTimingSource}`,
+		);
+		return serializeEditTranscript(
+			createEditTranscript(
+				result,
+				videoDurationSeconds > 0
+					? videoDurationSeconds * 1000
+					: (result.audio_duration ?? 0) * 1000,
+			),
+		);
+	}
+
 	const client = createAssemblyAIClient();
 	const transcript = await client.transcripts.transcribe({
 		audio: audioBuffer,

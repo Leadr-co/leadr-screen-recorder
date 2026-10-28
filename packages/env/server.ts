@@ -145,6 +145,36 @@ function createServerEnv() {
 				.describe(
 					"Transcription API base URL (eg. https://api.eu.assemblyai.com)",
 				),
+			TRANSCRIPTION_PROVIDER: z
+				.union([z.literal("assemblyai"), z.literal("openai-compatible")])
+				.optional()
+				.describe(
+					"Server-side transcription provider. When unset, 'assemblyai' is used if ASSEMBLY_API_KEY is set, otherwise 'openai-compatible' if TRANSCRIPTION_BASE_URL and TRANSCRIPTION_API_KEY are set.",
+				),
+			TRANSCRIPTION_BASE_URL: z
+				.string()
+				.optional()
+				.describe(
+					"Base URL of an OpenAI-compatible Whisper API for the 'openai-compatible' transcription provider (eg. https://api.groq.com/openai/v1, or a self-hosted faster-whisper/speaches server)",
+				),
+			TRANSCRIPTION_API_KEY: z
+				.string()
+				.optional()
+				.describe(
+					"API key for the 'openai-compatible' transcription provider (optional for keyless self-hosted servers when TRANSCRIPTION_PROVIDER is set explicitly)",
+				),
+			TRANSCRIPTION_MODEL: z
+				.string()
+				.optional()
+				.describe(
+					"Whisper model for the 'openai-compatible' transcription provider (default: whisper-large-v3-turbo)",
+				),
+			TRANSCRIPTION_MAX_UPLOAD_MB: z
+				.string()
+				.optional()
+				.describe(
+					"Largest audio file in MB sent to the 'openai-compatible' transcription provider (default: 25, Groq's free-tier limit). Larger recordings fail with a clear error.",
+				),
 			ANTHROPIC_API_KEY: z.string().optional().describe("AI chat"),
 			OPENAI_API_KEY: z.string().optional().describe("AI summaries"),
 			GROQ_API_KEY: z.string().optional().describe("AI summaries"),
