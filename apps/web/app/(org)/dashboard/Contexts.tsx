@@ -31,6 +31,7 @@ export function DashboardContexts({
 	organizationSettings,
 	userPreferences,
 	anyNewNotifications,
+	canCreateOrganizations,
 	initialTheme,
 	initialSidebarCollapsed,
 	referClicked,
@@ -44,6 +45,7 @@ export function DashboardContexts({
 	organizationSettings: SharedContext["organizationSettings"];
 	userPreferences: SharedContext["userPreferences"];
 	anyNewNotifications: boolean;
+	canCreateOrganizations: boolean;
 	initialTheme: ITheme;
 	initialSidebarCollapsed: boolean;
 	referClicked: boolean;
@@ -149,6 +151,7 @@ export function DashboardContexts({
 					spacesData,
 					userCapsCount,
 					anyNewNotifications,
+					canCreateOrganizations,
 					userPreferences,
 					organizationSettings,
 					userSpaces,

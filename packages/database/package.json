@@ -60,6 +60,7 @@
 		".": "./index.ts",
 		"./auth/auth-options": "./auth/auth-options.ts",
 		"./auth/domain-utils": "./auth/domain-utils.ts",
+		"./auth/new-user-organization": "./auth/new-user-organization.ts",
 		"./auth/request-site": "./auth/request-site.ts",
 		"./auth/session": "./auth/session.ts",
 		"./auth/sso": "./auth/sso.ts",

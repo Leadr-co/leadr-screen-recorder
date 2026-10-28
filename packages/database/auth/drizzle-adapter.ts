@@ -15,6 +15,7 @@ import {
 	users,
 	verificationTokens,
 } from "../schema.ts";
+import { provisionNewUserOrganization } from "./new-user-organization.ts";
 import type { ValidatedSsoIdentity } from "./sso.ts";
 import { provisionStripeCustomer } from "./stripe-customer.ts";
 
@@ -173,28 +174,7 @@ export function DrizzleAdapter(
 					return;
 				}
 
-				const organizationId = Organisation.OrganisationId.make(nanoId());
-
-				await tx.insert(organizations).values({
-					id: organizationId,
-					ownerId: userId,
-					name: "My Organization",
-				});
-
-				await tx.insert(organizationMembers).values({
-					id: nanoId(),
-					organizationId,
-					userId,
-					role: "owner",
-				});
-
-				await tx
-					.update(users)
-					.set({
-						activeOrganizationId: organizationId,
-						defaultOrgId: organizationId,
-					})
-					.where(eq(users.id, userId));
+				await provisionNewUserOrganization(tx, userId);
 			});
 
 			const rows = await db

@@ -124,6 +124,12 @@ function createServerEnv() {
 			CAP_ENFORCE_ALLOWED_DOMAINS: boolString(false).describe(
 				"Apply CAP_ALLOWED_SIGNUP_DOMAINS to existing accounts, sessions and API keys, not only to new signups",
 			),
+			CAP_DEFAULT_ORGANIZATION_ID: z
+				.string()
+				.optional()
+				.describe(
+					"Organization every new account joins as a member instead of getting a personal one. Also blocks creating other organizations.",
+				),
 			CAP_BLOCKED_SIGNUP_DOMAINS: z
 				.string()
 				.optional()
