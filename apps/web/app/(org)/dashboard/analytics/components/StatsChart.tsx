@@ -134,8 +134,8 @@ export default function StatsChart({
 						</p>
 						<p className="mt-1 max-w-sm text-sm text-gray-10 text-pretty">
 							{capId
-								? "Send this Cap to someone and every view, comment and reaction will land here."
-								: "Share a Cap and every view, comment and reaction will land here."}
+								? "Send this recording to someone and every view, comment and reaction will land here."
+								: "Share a recording and every view, comment and reaction will land here."}
 						</p>
 						{emptyAction && <div className="mt-5">{emptyAction}</div>}
 					</div>

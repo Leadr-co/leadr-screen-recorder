@@ -15,16 +15,11 @@ export default function VideoNotFound() {
 			doodle={<SearchDoodle />}
 			title="We couldn't find this video"
 			lede="It may have been deleted, or the link is missing a few characters. Check the link with whoever sent it to you."
-			footnote={
-				<>
-					Think this is a mistake? Email{" "}
-					<a href="mailto:hello@cap.so">hello@cap.so</a>
-				</>
-			}
+			footnote="Think this is a mistake? Contact the LEADR team."
 		>
 			<PaperActions>
 				<a className={styles.cta} href={homeHref}>
-					Go to Cap
+					Go to LEADR Screen Recorder
 				</a>
 			</PaperActions>
 		</PaperState>

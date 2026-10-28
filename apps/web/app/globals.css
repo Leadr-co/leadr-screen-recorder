@@ -4,15 +4,16 @@
 @import "@radix-ui/colors/gray-alpha.css";
 @import "@radix-ui/colors/gray-dark.css";
 @import "@radix-ui/colors/blue.css";
+@import "@radix-ui/colors/sand.css";
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-	--primary: #005cb1;
-	--primary-2: #004c93;
-	--primary-3: #003b73;
+	--primary: #ab2c21;
+	--primary-2: #8a2319;
+	--primary-3: #6e1c14;
 	--secondary: #2eb4ff;
 	--secondary-2: #1696e0;
 	--secondary-3: #117ebd;
@@ -32,6 +33,46 @@
 	--background-start-rgb: 214, 219, 220;
 	--background-end-rgb: 255, 255, 255;
 	--gradient-border-radius: 12px;
+	--blue-1: #fffcfb;
+	--blue-2: #fff5f3;
+	--blue-3: #fde8e4;
+	--blue-4: #fbd8d1;
+	--blue-5: #f5c5bb;
+	--blue-6: #ecada1;
+	--blue-7: #e08e7f;
+	--blue-8: #d06a58;
+	--blue-9: #ab2c21;
+	--blue-10: #8a2319;
+	--blue-11: #9e291e;
+	--blue-12: #3f0f0a;
+	--gray-1: var(--sand-1);
+	--gray-2: var(--sand-2);
+	--gray-3: var(--sand-3);
+	--gray-4: var(--sand-4);
+	--gray-5: var(--sand-5);
+	--gray-6: var(--sand-6);
+	--gray-7: var(--sand-7);
+	--gray-8: var(--sand-8);
+	--gray-9: var(--sand-9);
+	--gray-10: var(--sand-10);
+	--gray-11: var(--sand-11);
+	--gray-12: var(--sand-12);
+}
+
+.dark,
+.dark-theme {
+	--blue-1: #1a0f0d;
+	--blue-2: #221310;
+	--blue-3: #3b1712;
+	--blue-4: #501a13;
+	--blue-5: #611f17;
+	--blue-6: #74271e;
+	--blue-7: #8f3226;
+	--blue-8: #b8402f;
+	--blue-9: #ab2c21;
+	--blue-10: #c03a2d;
+	--blue-11: #ff8b7e;
+	--blue-12: #ffd1cb;
 }
 
 @media (prefers-color-scheme: dark) {

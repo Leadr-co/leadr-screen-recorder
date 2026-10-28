@@ -228,7 +228,7 @@ export function AnalyticsDashboard() {
 								rel="noreferrer"
 								className="inline-flex gap-2 items-center px-5 h-10 text-sm font-medium rounded-full transition-colors bg-gray-12 text-gray-1 hover:bg-gray-11"
 							>
-								Open Cap
+								Open recording
 							</a>
 						) : undefined
 					}

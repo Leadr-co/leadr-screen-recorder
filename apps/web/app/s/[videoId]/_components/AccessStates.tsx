@@ -59,7 +59,7 @@ export function PrivateVideoState({ videoId }: { videoId: Video.VideoId }) {
 						className={`${styles.cta} ${styles.ghost}`}
 						href={`${buildEnv.NEXT_PUBLIC_WEB_URL}/dashboard`}
 					>
-						Go to my Caps
+						Go to my recordings
 					</a>
 				</PaperActions>
 			</PaperState>

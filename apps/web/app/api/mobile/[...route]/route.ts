@@ -178,7 +178,7 @@ const sendMobileEmailCode = async (email: string, code: string) => {
 
 	const delivery = await sendEmail({
 		email,
-		subject: "Your Cap Verification Code",
+		subject: "Your LEADR Screen Recorder Verification Code",
 		react: OTPEmail({ code, email }),
 	});
 	if (delivery?.error) {
@@ -425,6 +425,10 @@ const ensureEmailSignInAllowed = Effect.fn("Mobile.ensureEmailSignInAllowed")(
 
 		const allowedDomains = serverEnv().CAP_ALLOWED_SIGNUP_DOMAINS;
 		if (!allowedDomains) return;
+		if (serverEnv().CAP_ENFORCE_ALLOWED_DOMAINS) {
+			if (isEmailAllowedForSignup(email, allowedDomains)) return;
+			return yield* Effect.fail(new HttpApiError.Forbidden());
+		}
 
 		const database = yield* Database;
 		const [existingUser] = yield* database.use((db) =>

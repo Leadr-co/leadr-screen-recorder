@@ -31,20 +31,20 @@ describe("Slack app manifest", () => {
 		) as SlackAppManifest;
 
 		expect(manifest.display_information).toMatchObject({
-			description: "Use Cap directly inside Slack.",
-			background_color: "#1e60e6",
+			description: "Rich previews for LEADR Screen Recorder links in Slack.",
+			background_color: "#ab2c21",
 		});
-		expect(manifest.features.unfurl_domains).toEqual(["cap.so", "cap.link"]);
+		expect(manifest.features.unfurl_domains).toEqual(["record.leadr.co"]);
 		expect(manifest.oauth_config.scopes.bot).toEqual([
 			"links:read",
 			"links:write",
 			"links.embed:write",
 		]);
 		expect(manifest.oauth_config.redirect_urls).toEqual([
-			"https://cap.so/api/integrations/slack/callback",
+			"https://record.leadr.co/api/integrations/slack/callback",
 		]);
 		expect(manifest.settings.event_subscriptions).toEqual({
-			request_url: "https://cap.so/api/integrations/slack/events",
+			request_url: "https://record.leadr.co/api/integrations/slack/events",
 			bot_events: ["link_shared", "app_uninstalled"],
 		});
 	});

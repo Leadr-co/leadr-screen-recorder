@@ -4,26 +4,28 @@
 		"minor_version": 1
 	},
 	"display_information": {
-		"name": "Cap",
-		"description": "Use Cap directly inside Slack.",
-		"background_color": "#1e60e6"
+		"name": "LEADR Screen Recorder",
+		"description": "Rich previews for LEADR Screen Recorder links in Slack.",
+		"background_color": "#ab2c21"
 	},
 	"features": {
 		"bot_user": {
-			"display_name": "cap",
+			"display_name": "leadr-recorder",
 			"always_online": false
 		},
-		"unfurl_domains": ["cap.so", "cap.link"]
+		"unfurl_domains": ["record.leadr.co"]
 	},
 	"oauth_config": {
-		"redirect_urls": ["https://cap.so/api/integrations/slack/callback"],
+		"redirect_urls": [
+			"https://record.leadr.co/api/integrations/slack/callback"
+		],
 		"scopes": {
 			"bot": ["links:read", "links:write", "links.embed:write"]
 		}
 	},
 	"settings": {
 		"event_subscriptions": {
-			"request_url": "https://cap.so/api/integrations/slack/events",
+			"request_url": "https://record.leadr.co/api/integrations/slack/events",
 			"bot_events": ["link_shared", "app_uninstalled"]
 		},
 		"org_deploy_enabled": false,

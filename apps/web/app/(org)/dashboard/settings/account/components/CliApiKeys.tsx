@@ -253,7 +253,7 @@ export const CliApiKeys = ({
 				<DialogContent>
 					<DialogHeader
 						icon={<KeyRound className="size-4" />}
-						description="Cap stores only a hash of this key, so it cannot be shown again."
+						description="LEADR Screen Recorder stores only a hash of this key, so it cannot be shown again."
 					>
 						<DialogTitle>Copy your API key</DialogTitle>
 					</DialogHeader>

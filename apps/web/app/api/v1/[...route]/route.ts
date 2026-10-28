@@ -4926,7 +4926,7 @@ const AgentManagementHandlersLive = HttpApiBuilder.group(
 									try: async () => {
 										const delivery = await sendEmail({
 											email,
-											subject: `Invitation to join ${organization.name} on Cap`,
+											subject: `Invitation to join ${organization.name} on LEADR Screen Recorder`,
 											react: OrganizationInvite({
 												email,
 												url: invitation.inviteUrl,

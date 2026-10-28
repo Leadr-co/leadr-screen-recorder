@@ -7,7 +7,7 @@ import { SlackIntegration } from "./slack-integration";
 import { OrganizationStorageIntegrations } from "./storage-integrations";
 
 export const metadata: Metadata = {
-	title: "Organization Integrations — Cap",
+	title: "Organization Integrations — LEADR Screen Recorder",
 };
 
 export default async function OrganizationIntegrationsPage({

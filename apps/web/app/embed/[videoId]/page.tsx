@@ -69,13 +69,13 @@ export async function generateMetadata(
 		Effect.catchTags({
 			PolicyDenied: () =>
 				Effect.succeed({
-					title: "Cap: This video is private",
+					title: "This video is private | LEADR Screen Recorder",
 					description: "This video is private and cannot be shared.",
 					robots: "noindex, nofollow",
 				}),
 			VerifyVideoPasswordError: () =>
 				Effect.succeed({
-					title: "Cap: Password Protected Video",
+					title: "Password Protected Video | LEADR Screen Recorder",
 					description: "This video is password protected.",
 					robots: "noindex, nofollow",
 				}),

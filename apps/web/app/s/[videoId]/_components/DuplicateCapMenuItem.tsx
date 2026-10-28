@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { useEffectMutation, useRpcClient } from "@/lib/EffectRuntime";
 
 /**
- * The "Duplicate Cap" row of the owner menu, self-contained so its RPC
+ * The "Duplicate recording" row of the owner menu, self-contained so its RPC
  * mutation — and the Effect runtime it drags along — loads only when the menu
  * is actually opened, not on every share-page view.
  */
@@ -26,10 +26,10 @@ export default function DuplicateCapMenuItem({
 		mutationKey: ["videoDuplicate", videoId],
 		mutationFn: () => rpc.VideoDuplicate(videoId),
 		onSuccess: () => {
-			toast.success("Cap duplicated successfully");
+			toast.success("Recording duplicated successfully");
 		},
 		onError: () => {
-			toast.error("Failed to duplicate Cap");
+			toast.error("Failed to duplicate recording");
 		},
 	});
 	// Read pending state through the cache, not the hook instance: the menu
@@ -46,7 +46,7 @@ export default function DuplicateCapMenuItem({
 		>
 			<FontAwesomeIcon className="size-3" icon={faCopy} />
 			<p className="text-sm text-gray-12">
-				{isDuplicating ? "Duplicating..." : "Duplicate Cap"}
+				{isDuplicating ? "Duplicating..." : "Duplicate recording"}
 			</p>
 		</DropdownMenuItem>
 	);

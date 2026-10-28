@@ -228,13 +228,15 @@ const createProps = (
 const expectChromeVisible = (container: HTMLElement) => {
 	expect(container.textContent).toContain("Test video");
 	expect(
-		container.querySelector('[aria-label="Powered by Cap"]'),
+		container.querySelector('[aria-label="Powered by LEADR Screen Recorder"]'),
 	).not.toBeNull();
 };
 
 const expectChromeHidden = (container: HTMLElement) => {
 	expect(container.textContent).not.toContain("Test video");
-	expect(container.querySelector('[aria-label="Powered by Cap"]')).toBeNull();
+	expect(
+		container.querySelector('[aria-label="Powered by LEADR Screen Recorder"]'),
+	).toBeNull();
 };
 
 beforeAll(async () => {
@@ -509,7 +511,11 @@ describe.each([
 			const expectBranding = () => {
 				expect(container.textContent).toContain("Test video");
 				expect(
-					Boolean(container.querySelector('[aria-label="Powered by Cap"]')),
+					Boolean(
+						container.querySelector(
+							'[aria-label="Powered by LEADR Screen Recorder"]',
+						),
+					),
 				).toBe(expected === "cap");
 				expect(Boolean(container.querySelector("[data-cap-logo]"))).toBe(
 					expected === "cap",

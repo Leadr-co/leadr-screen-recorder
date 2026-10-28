@@ -288,7 +288,7 @@ export async function generateMetadata(
 				onNone: () =>
 					awaitRecording
 						? {
-								title: "Cap: Preparing Video",
+								title: "Preparing Video | LEADR Screen Recorder",
 								description: "This recording is being made available.",
 								robots: "noindex, nofollow",
 							}
@@ -315,7 +315,7 @@ export async function generateMetadata(
 		Effect.catchTags({
 			PolicyDenied: () =>
 				Effect.succeed({
-					title: "Cap: This video is restricted",
+					title: "This video is restricted | LEADR Screen Recorder",
 					description: "This video has restricted access.",
 					openGraph: {
 						images: [{ url: ogImageUrl, width: 1200, height: 630 }],
@@ -324,14 +324,14 @@ export async function generateMetadata(
 				}),
 			VerifyVideoPasswordError: () =>
 				Effect.succeed({
-					title: "Cap: Password Protected Video",
+					title: "Password Protected Video | LEADR Screen Recorder",
 					description: "This video is password protected.",
 					openGraph: {
 						images: [{ url: ogImageUrl, width: 1200, height: 630 }],
 					},
 					twitter: {
 						card: "summary_large_image",
-						title: "Cap: Password Protected Video",
+						title: "Password Protected Video | LEADR Screen Recorder",
 						description: "This video is password protected.",
 						images: [ogImageUrl],
 					},

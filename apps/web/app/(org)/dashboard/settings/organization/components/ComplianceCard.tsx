@@ -1,5 +1,6 @@
 "use client";
 
+import { buildEnv } from "@cap/env";
 import { Button, Card, CardDescription, CardHeader, CardTitle } from "@cap/ui";
 import type { ReactNode } from "react";
 
@@ -79,6 +80,7 @@ const certifications: {
 ];
 
 export function ComplianceCard() {
+	if (!buildEnv.NEXT_PUBLIC_IS_CAP) return null;
 	return (
 		<Card>
 			<div className="flex flex-wrap gap-6 justify-between items-start">

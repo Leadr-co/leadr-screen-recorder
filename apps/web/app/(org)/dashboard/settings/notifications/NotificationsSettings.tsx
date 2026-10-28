@@ -33,7 +33,7 @@ const NOTIFICATION_TYPES: {
 		key: "pauseComments",
 		title: "Comments",
 		description:
-			"Email and in-app alert when someone comments on one of your Caps.",
+			"Email and in-app alert when someone comments on one of your recordings.",
 	},
 	{
 		key: "pauseReplies",
@@ -43,17 +43,19 @@ const NOTIFICATION_TYPES: {
 	{
 		key: "pauseViews",
 		title: "Views",
-		description: "Alert when a signed-in viewer watches one of your Caps.",
+		description:
+			"Alert when a signed-in viewer watches one of your recordings.",
 	},
 	{
 		key: "pauseAnonViews",
 		title: "Anonymous views",
-		description: "Alert when an anonymous viewer watches one of your Caps.",
+		description:
+			"Alert when an anonymous viewer watches one of your recordings.",
 	},
 	{
 		key: "pauseReactions",
 		title: "Reactions",
-		description: "In-app alert when someone reacts to one of your Caps.",
+		description: "In-app alert when someone reacts to one of your recordings.",
 	},
 ];
 
