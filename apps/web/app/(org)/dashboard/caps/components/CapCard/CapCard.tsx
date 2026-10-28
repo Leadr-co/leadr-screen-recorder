@@ -332,7 +332,7 @@ export const CapCard = ({
 	const handleCopy = (text: string) => {
 		copyRichVideoLink({
 			url: text,
-			title: cap.name || "Cap Recording",
+			title: cap.name || "Recording",
 			previewImageUrl: videoPreviewImageUrl(webUrl, cap.id),
 		});
 		setCopyPressed(true);
@@ -595,7 +595,7 @@ export const CapCard = ({
 										onClick={() => {
 											toast.promise(duplicateMutation.mutateAsync(), {
 												loading: "Duplicating cap...",
-												success: "Cap duplicated successfully",
+												success: "Recording duplicated successfully",
 												error: "Failed to duplicate cap",
 											});
 										}}
@@ -642,7 +642,7 @@ export const CapCard = ({
 										className="flex gap-2 items-center rounded-lg"
 									>
 										<FontAwesomeIcon className="size-3" icon={faTrash} />
-										<p className="text-sm text-gray-12">Delete Cap</p>
+										<p className="text-sm text-gray-12">Delete recording</p>
 									</DropdownMenuItem>
 								</>
 							)}
@@ -652,7 +652,7 @@ export const CapCard = ({
 					<ConfirmationDialog
 						open={confirmOpen}
 						icon={<FontAwesomeIcon icon={faVideo} />}
-						title="Delete Cap"
+						title="Delete recording"
 						description={`Are you sure you want to delete the cap "${cap.name}"? This action cannot be undone.`}
 						confirmLabel={deleteMutation.isPending ? "Deleting..." : "Delete"}
 						cancelLabel="Cancel"

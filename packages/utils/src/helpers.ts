@@ -1,3 +1,4 @@
+import { buildEnv } from "@cap/env";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -13,8 +14,8 @@ export const uuidFormat = (uuid: string) => {
 	return uuid.replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/, "$1-$2-$3-$4-$5");
 };
 
-export const CAP_LOGO_URL =
-	"https://raw.githubusercontent.com/CapSoftware/cap/main/apps/desktop/src-tauri/icons/Square310x310Logo.png";
+export const getEmailLogoUrl = () =>
+	new URL("/leadr-logo-email.png", buildEnv.NEXT_PUBLIC_WEB_URL).toString();
 
 export const saveLatestVideoId = (videoId: string) => {
 	try {

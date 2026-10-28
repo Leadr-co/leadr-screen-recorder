@@ -1,4 +1,4 @@
-import { CAP_LOGO_URL } from "@cap/utils";
+import { getEmailLogoUrl } from "@cap/utils";
 import {
 	Body,
 	Container,
@@ -32,10 +32,10 @@ export function Feedback({
 					<Container className="mx-auto my-10 max-w-[500px] rounded border border-solid border-gray-200 px-10 py-5">
 						<Section className="mt-8">
 							<Img
-								src={CAP_LOGO_URL}
+								src={getEmailLogoUrl()}
 								width="40"
 								height="40"
-								alt="Cap"
+								alt="LEADR"
 								className="mx-auto my-0"
 							/>
 						</Section>

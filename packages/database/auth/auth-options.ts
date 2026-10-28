@@ -290,7 +290,7 @@ export const authOptions = (ssoContext?: SsoAuthContext): NextAuthOptions => {
 							const email = OTPEmail({ code: token, email: identifier });
 							const delivery = await sendEmail({
 								email: identifier,
-								subject: `Your Cap Verification Code`,
+								subject: `Your LEADR Screen Recorder Verification Code`,
 								react: email,
 							});
 							if (delivery?.error) {

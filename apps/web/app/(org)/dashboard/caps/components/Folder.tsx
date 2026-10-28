@@ -68,7 +68,9 @@ const FolderCard = ({
 	const moveEnabled = canMove ?? !spaceId;
 	const effectiveMoveRootLabel =
 		moveRootLabel ??
-		(!spaceId ? "My Caps" : (activeOrganization?.organization.name ?? "Space"));
+		(!spaceId
+			? "My Recordings"
+			: (activeOrganization?.organization.name ?? "Space"));
 	const moveLocation = resolveMoveLocation(
 		spaceId,
 		activeOrganization?.organization.id,

@@ -7,7 +7,7 @@ import { ComplianceCard } from "../components/ComplianceCard";
 import { SsoCard } from "../components/SsoCard";
 
 export const metadata: Metadata = {
-	title: "Security & Compliance — Cap",
+	title: "Security & Compliance — LEADR Screen Recorder",
 };
 
 export default async function OrganizationSecurityPage({

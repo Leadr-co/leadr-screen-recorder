@@ -35,7 +35,7 @@ export const METRIC_META: Record<
 	{ label: string; color: string; kind: "line" | "bar" }
 > = {
 	views: { label: "Views", color: "#4785ff", kind: "line" },
-	caps: { label: "Caps created", color: "var(--gray-11)", kind: "line" },
+	caps: { label: "Recordings created", color: "var(--gray-11)", kind: "line" },
 	comments: { label: "Comments", color: "#f0805f", kind: "bar" },
 	reactions: { label: "Reactions", color: "#f5b546", kind: "bar" },
 };

@@ -178,7 +178,7 @@ const sendMobileEmailCode = async (email: string, code: string) => {
 
 	const delivery = await sendEmail({
 		email,
-		subject: "Your Cap Verification Code",
+		subject: "Your LEADR Screen Recorder Verification Code",
 		react: OTPEmail({ code, email }),
 	});
 	if (delivery?.error) {

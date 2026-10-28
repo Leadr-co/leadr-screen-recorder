@@ -90,8 +90,8 @@ export const buildShareVideoMetadata = ({
 		webUrl,
 		canonicalWebUrl,
 	});
-	const title = `${name} | Cap Recording`;
-	const description = "Watch this video on Cap";
+	const title = `${name} | LEADR Screen Recorder`;
+	const description = "Watch this video on LEADR Screen Recorder";
 	const hasDimensions =
 		width != null && height != null && width > 0 && height > 0;
 	const playerWidth = hasDimensions ? width : PLAYER_WIDTH;
@@ -128,7 +128,7 @@ export const buildShareVideoMetadata = ({
 		openGraph: {
 			type: "video.other",
 			url: urls.shareUrl,
-			siteName: "Cap",
+			siteName: "LEADR Screen Recorder",
 			title,
 			description,
 			ttl: 300,

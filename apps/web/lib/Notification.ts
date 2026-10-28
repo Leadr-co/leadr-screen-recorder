@@ -317,7 +317,7 @@ async function sendNewCommentEmail(params: {
 
 		await sendEmail({
 			email: recipient.email,
-			subject: `New comment on your Cap: ${videoName}`,
+			subject: `New comment on your recording: ${videoName}`,
 			react: NewComment({
 				email: recipient.email,
 				url: videoUrl,
@@ -474,7 +474,7 @@ export async function sendFirstViewEmail(
 
 		await sendEmail({
 			email: videoWithOwner.ownerEmail,
-			subject: `Your Cap "${displayName}" just got its first view!`,
+			subject: `Your recording "${displayName}" just got its first view!`,
 			react: FirstView({
 				email: videoWithOwner.ownerEmail,
 				url: videoUrl,

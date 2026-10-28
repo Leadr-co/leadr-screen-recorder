@@ -309,7 +309,7 @@ describe("placing owned Caps in team folders", () => {
 				group.folders.map((folder) => folder.id),
 			]),
 		).toEqual([
-			["My Caps", ["mine"]],
+			["My Recordings", ["mine"]],
 			["All team members", [folderId]],
 			["Team space", ["space-folder"]],
 		]);

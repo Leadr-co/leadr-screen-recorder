@@ -59,10 +59,10 @@ const Top = () => {
 	const params = useParams();
 
 	const titles: Record<string, string> = {
-		"/dashboard/caps": "Caps",
-		"/dashboard/folder": "Caps",
-		"/dashboard/shared-caps": "Shared Caps",
-		"/dashboard/caps/record": "Record a Cap",
+		"/dashboard/caps": "Recordings",
+		"/dashboard/folder": "Recordings",
+		"/dashboard/shared-caps": "Shared Recordings",
+		"/dashboard/caps/record": "Record a Video",
 		"/dashboard/settings/organization": "Organization Settings",
 		"/dashboard/settings/organization/preferences": "Organization Settings",
 		"/dashboard/settings/organization/content": "Organization Settings",
@@ -73,8 +73,8 @@ const Top = () => {
 		"/dashboard/spaces": "Spaces",
 		"/dashboard/spaces/browse": "Browse Spaces",
 		"/dashboard/analytics": "Analytics",
-		[`/dashboard/folder/${params.id}`]: "Caps",
-		[`/dashboard/analytics/s/${params.id}`]: "Analytics: Cap video title",
+		[`/dashboard/folder/${params.id}`]: "Recordings",
+		[`/dashboard/analytics/s/${params.id}`]: "Recording Analytics",
 		"/dashboard/developers": "Developers",
 		"/dashboard/developers/apps": "Developer Apps",
 		"/dashboard/developers/usage": "Developer Usage",

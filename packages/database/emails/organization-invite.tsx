@@ -1,4 +1,4 @@
-import { CAP_LOGO_URL } from "@cap/utils";
+import { getEmailLogoUrl } from "@cap/utils";
 import {
 	Body,
 	Container,
@@ -26,16 +26,18 @@ export function OrganizationInvite({
 	return (
 		<Html>
 			<Head />
-			<Preview>Invitation to join {organizationName} on Cap</Preview>
+			<Preview>
+				Invitation to join {organizationName} on LEADR Screen Recorder
+			</Preview>
 			<Tailwind>
 				<Body className="mx-auto my-auto bg-gray-1 font-sans">
 					<Container className="mx-auto my-10 max-w-[500px] rounded border border-solid border-gray-200 px-10 py-5">
 						<Section className="mt-8">
 							<Img
-								src={CAP_LOGO_URL}
+								src={getEmailLogoUrl()}
 								width="40"
 								height="40"
-								alt="Cap"
+								alt="LEADR"
 								className="mx-auto my-0"
 							/>
 						</Section>
@@ -45,8 +47,8 @@ export function OrganizationInvite({
 						<Text className="text-sm leading-6 text-black">Hello,</Text>
 						<Text className="text-sm leading-6 text-black">
 							You've been invited to join the {organizationName} organization on
-							Cap. Click the button below to accept the invitation and join the
-							team.
+							LEADR Screen Recorder. Click the button below to accept the
+							invitation and join the team.
 						</Text>
 						<Section className="my-8 text-center">
 							<Link
