@@ -1601,7 +1601,12 @@ export async function processVideo(
 	abortSignal?: AbortSignal,
 	resilientFlags?: ResilientInputFlags,
 ): Promise<TempFileHandle> {
-	if (abortSignal?.aborted) throw new Error("Video processing was cancelled");
+	if (abortSignal?.aborted) {
+		const reason: unknown = abortSignal.reason;
+		throw reason instanceof Error && reason.name !== "AbortError"
+			? reason
+			: new Error("Video processing was cancelled");
+	}
 	const definedOptions = Object.fromEntries(
 		Object.entries(options).filter(([, value]) => value !== undefined),
 	) as VideoProcessingOptions;
