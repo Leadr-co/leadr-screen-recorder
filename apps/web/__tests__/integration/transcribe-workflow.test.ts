@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { assemblyAIEditResponse } from "../fixtures/assemblyai-edit-response";
 
 const mocks = vi.hoisted(() => ({
@@ -43,12 +43,16 @@ const videoRow = vi.hoisted(() => ({
 	},
 }));
 
-const state = vi.hoisted(() => ({ editRows: [] as unknown[] }));
+const state = vi.hoisted(() => ({
+	editRows: [] as unknown[],
+	envOverrides: {} as Record<string, string | undefined>,
+}));
 
 vi.mock("@cap/env", () => ({
 	serverEnv: () => ({
 		ASSEMBLY_API_KEY: "test-assembly-api-key",
 		NEXTAUTH_SECRET: "test-secret-with-enough-entropy",
+		...state.envOverrides,
 	}),
 }));
 
@@ -418,5 +422,146 @@ describe("backfillEditTranscriptWorkflow", () => {
 			expect.anything(),
 			expect.anything(),
 		);
+	});
+});
+
+describe("transcription with an OpenAI-compatible Whisper provider", () => {
+	const spokenResponse = {
+		language: "english",
+		duration: 4,
+		text: " Hello from Groq.",
+		words: [
+			{ word: " Hello", start: 0.1, end: 0.5 },
+			{ word: " from", start: 0.5, end: 0.8 },
+			{ word: " Groq.", start: 0.8, end: 1.4 },
+		],
+	};
+	let whisperResponse: unknown = spokenResponse;
+	const whisperFetch = vi.fn(async (_input: string, init?: RequestInit) => {
+		if (init?.method === "POST") return Response.json(whisperResponse);
+		return new Response(new Uint8Array(8), {
+			headers: { "content-type": "audio/mpeg" },
+		});
+	});
+
+	beforeEach(() => {
+		mocks.updates.length = 0;
+		state.editRows = [];
+		state.envOverrides = {
+			ASSEMBLY_API_KEY: undefined,
+			TRANSCRIPTION_BASE_URL: "https://api.groq.com/openai/v1",
+			TRANSCRIPTION_API_KEY: "gsk_test",
+		};
+		videoRow.metadata = {
+			editTranscriptBackfill: {
+				status: "processing",
+				requestId: "request-1",
+				requestedAt: "2026-07-30T00:00:00.000Z",
+			},
+		};
+		mocks.transcribe.mockClear();
+		mocks.putObject.mockReset();
+		mocks.putObject.mockImplementation(() => pipeValue(undefined));
+		mocks.deleteObject.mockImplementation(() => pipeValue(undefined));
+		mocks.getInternalSignedObjectUrl.mockImplementation(() =>
+			pipeValue("https://storage.test/object"),
+		);
+		whisperResponse = spokenResponse;
+		whisperFetch.mockClear();
+		vi.stubGlobal("fetch", whisperFetch);
+	});
+
+	afterEach(() => {
+		state.envOverrides = {};
+		vi.unstubAllGlobals();
+	});
+
+	it("writes captions and the word transcript without calling AssemblyAI", async () => {
+		const { transcribeVideoWorkflow } = await import("@/workflows/transcribe");
+
+		const result = await transcribeVideoWorkflow({
+			videoId: "video-123",
+			userId: "user-456",
+			aiGenerationEnabled: false,
+		});
+
+		expect(result.success).toBe(true);
+		expect(mocks.transcribe).not.toHaveBeenCalled();
+		const posts = whisperFetch.mock.calls.filter(
+			([, init]) => init?.method === "POST",
+		);
+		expect(posts).toHaveLength(1);
+		expect(posts[0]?.[0]).toBe(
+			"https://api.groq.com/openai/v1/audio/transcriptions",
+		);
+
+		const writes = new Map(
+			mocks.putObject.mock.calls.map((call) => [call[0] as string, call[1]]),
+		);
+		const vtt = writes.get("user-456/video-123/transcription.vtt") as string;
+		expect(vtt).toContain("Hello from Groq.");
+
+		const { parseEditTranscript } = await import("@/lib/edit-transcript");
+		const { decryptEditTranscriptObject } = await import(
+			"@/lib/edit-transcript-storage"
+		);
+		const stored = parseEditTranscript(
+			decryptEditTranscriptObject(
+				writes.get("user-456/video-123/transcription.edit.v3.json") as string,
+				"user-456",
+				"video-123",
+			) ?? "",
+		);
+		expect(stored).toMatchObject({
+			speechModelUsed: "whisper-large-v3-turbo",
+			languageCode: "en",
+			durationMs: 4_000,
+		});
+		expect(stored?.words.map((word) => [word.startMs, word.endMs])).toEqual([
+			[100, 500],
+			[500, 800],
+			[800, 1_400],
+		]);
+		expect(mocks.updates.at(-1)).toEqual({ transcriptionStatus: "COMPLETE" });
+	});
+
+	it("marks silent audio as NO_AUDIO", async () => {
+		whisperResponse = { text: "", duration: 4, segments: [], words: [] };
+
+		const { transcribeVideoWorkflow } = await import("@/workflows/transcribe");
+		const result = await transcribeVideoWorkflow({
+			videoId: "video-123",
+			userId: "user-456",
+			aiGenerationEnabled: false,
+		});
+
+		expect(result).toEqual({
+			success: true,
+			message: "Video has no spoken audio - skipped transcription",
+		});
+		expect(mocks.updates).toContainEqual({ transcriptionStatus: "NO_AUDIO" });
+	});
+
+	it("backfills the editable transcript through the same provider", async () => {
+		const { backfillEditTranscriptWorkflow } = await import(
+			"@/workflows/transcribe"
+		);
+		const result = await backfillEditTranscriptWorkflow({
+			videoId: "video-123",
+			userId: "user-456",
+			requestId: "request-1",
+		});
+
+		expect(result.success).toBe(true);
+		expect(mocks.transcribe).not.toHaveBeenCalled();
+		const post = whisperFetch.mock.calls.find(
+			([, init]) => init?.method === "POST",
+		);
+		expect((post?.[1]?.body as FormData).has("language")).toBe(false);
+		expect(
+			mocks.putObject.mock.calls.some(
+				(call) => call[0] === "user-456/video-123/transcription.edit.v3.json",
+			),
+		).toBe(true);
 	});
 });

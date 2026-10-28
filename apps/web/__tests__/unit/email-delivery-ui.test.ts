@@ -29,6 +29,7 @@ vi.mock("next/navigation", () => ({
 }));
 vi.mock("next-auth/react", () => ({ signIn: mocks.signIn }));
 vi.mock("sonner", () => ({ toast: mocks.toast }));
+vi.mock("@cap/env", () => ({ buildEnv: { NEXT_PUBLIC_IS_CAP: false } }));
 vi.mock("@cap/utils", async () => await import("@cap/utils/helpers"));
 vi.mock("@cap/ui", async () => ({
 	...(await import("../../../../packages/ui/src/components/Button")),

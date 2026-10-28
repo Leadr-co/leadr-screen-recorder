@@ -1,10 +1,15 @@
 import { serverEnv } from "@cap/env";
+import {
+	parseSlackScopes,
+	SLACK_BOT_SCOPES,
+	SLACK_UNFURL_SCOPES,
+} from "./scopes";
 
-export const SLACK_BOT_SCOPES = [
-	"links:read",
-	"links:write",
-	"links.embed:write",
-] as const;
+export {
+	SLACK_BOT_SCOPES,
+	SLACK_DIRECT_MESSAGE_SCOPES,
+	SLACK_UNFURL_SCOPES,
+} from "./scopes";
 
 type SlackConfig = {
 	clientId: string;
@@ -123,13 +128,7 @@ export const exchangeSlackOAuthCode = async ({
 	}
 
 	const accessToken = body.access_token;
-	const grantedScopes =
-		typeof body.scope === "string"
-			? body.scope
-					.split(",")
-					.map((scope) => scope.trim())
-					.filter(Boolean)
-			: [];
+	const grantedScopes = parseSlackScopes(body.scope);
 	const team = body.team;
 	const enterprise = body.enterprise;
 	if (
@@ -141,7 +140,7 @@ export const exchangeSlackOAuthCode = async ({
 	) {
 		throw new Error("Slack OAuth response is missing workspace credentials");
 	}
-	if (!SLACK_BOT_SCOPES.every((scope) => grantedScopes.includes(scope))) {
+	if (!SLACK_UNFURL_SCOPES.every((scope) => grantedScopes.includes(scope))) {
 		throw new Error("Slack OAuth response is missing required unfurl scopes");
 	}
 
@@ -219,4 +218,84 @@ export const sendSlackUnfurl = async ({
 			await sleepImpl(attempt * 250);
 		}
 	}
+};
+
+export class SlackApiError extends Error {
+	readonly code: string;
+
+	constructor(method: string, code: string) {
+		super(`Slack ${method} failed: ${code}`);
+		this.name = "SlackApiError";
+		this.code = code;
+	}
+}
+
+export const lookupSlackUserIdByEmail = async ({
+	token,
+	email,
+	fetchImpl = fetch,
+}: {
+	token: string;
+	email: string;
+	fetchImpl?: typeof fetch;
+}): Promise<string | null> => {
+	const url = new URL("https://slack.com/api/users.lookupByEmail");
+	url.searchParams.set("email", email);
+	const response = await fetchImpl(url.toString(), {
+		method: "GET",
+		headers: { Authorization: `Bearer ${token}` },
+		signal: AbortSignal.timeout(10_000),
+	});
+	const body = await parseSlackResponse(response);
+	if (response.ok && body.ok === true) {
+		const user = body.user;
+		if (
+			!user ||
+			typeof user !== "object" ||
+			typeof (user as { id?: unknown }).id !== "string" ||
+			(user as { deleted?: unknown }).deleted === true ||
+			(user as { is_bot?: unknown }).is_bot === true
+		) {
+			return null;
+		}
+		return (user as { id: string }).id;
+	}
+	if (body.error === "users_not_found") return null;
+	throw new SlackApiError(
+		"users.lookupByEmail",
+		typeof body.error === "string" ? body.error : String(response.status),
+	);
+};
+
+export const postSlackMessage = async ({
+	token,
+	channel,
+	text,
+	fetchImpl = fetch,
+}: {
+	token: string;
+	channel: string;
+	text: string;
+	fetchImpl?: typeof fetch;
+}) => {
+	const response = await fetchImpl("https://slack.com/api/chat.postMessage", {
+		method: "POST",
+		headers: {
+			Authorization: `Bearer ${token}`,
+			"Content-Type": "application/json; charset=utf-8",
+		},
+		body: JSON.stringify({
+			channel,
+			text,
+			unfurl_links: false,
+			unfurl_media: false,
+		}),
+		signal: AbortSignal.timeout(10_000),
+	});
+	const body = await parseSlackResponse(response);
+	if (response.ok && body.ok === true) return;
+	throw new SlackApiError(
+		"chat.postMessage",
+		typeof body.error === "string" ? body.error : String(response.status),
+	);
 };

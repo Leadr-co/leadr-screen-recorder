@@ -19,6 +19,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock("next-auth/react", () => ({ signIn: mocks.signIn }));
 vi.mock("@sentry/nextjs", () => ({ captureException: mocks.captureException }));
 vi.mock("sonner", () => ({ toast: { error: mocks.error } }));
+vi.mock("@cap/env", () => ({ buildEnv: { NEXT_PUBLIC_IS_CAP: false } }));
 vi.mock("next/navigation", () => ({
 	useSearchParams: () => mocks.searchParams,
 	useRouter: () => ({ push: vi.fn() }),

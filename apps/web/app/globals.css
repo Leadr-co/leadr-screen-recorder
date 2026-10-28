@@ -33,6 +33,12 @@
 	--background-start-rgb: 214, 219, 220;
 	--background-end-rgb: 255, 255, 255;
 	--gradient-border-radius: 12px;
+}
+
+/* theme-script.js puts .light on <body>, where Radix's own .light scale would override :root */
+:root,
+.light,
+.light-theme {
 	--blue-1: #fffcfb;
 	--blue-2: #fff5f3;
 	--blue-3: #fde8e4;

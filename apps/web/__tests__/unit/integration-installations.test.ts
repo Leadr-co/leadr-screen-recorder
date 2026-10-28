@@ -5,6 +5,7 @@ const integrationMocks = vi.hoisted(() => ({
 	deleteIntegrationInstallation: vi.fn(async () => undefined),
 	deleteIntegrationInstallationByExternalId: vi.fn(async () => undefined),
 	getIntegrationCredentials: vi.fn(),
+	listIntegrationCredentials: vi.fn(),
 	listIntegrationInstallations: vi.fn(),
 	saveIntegrationInstallation: vi.fn(async () => undefined),
 }));
@@ -15,6 +16,7 @@ import {
 	deleteSlackInstallation,
 	deleteSlackInstallationByTeamId,
 	getSlackInstallationToken,
+	listSlackInstallationAccess,
 	listSlackInstallations,
 	saveSlackInstallation,
 } from "@/lib/slack/installations";
@@ -62,6 +64,26 @@ describe("integration installations", () => {
 				id: "installation123",
 				externalId: "T123",
 				displayName: "Cap",
+				metadata: {
+					scopes: ["links:read", "links:write", "links.embed:write"],
+				},
+				createdAt,
+				updatedAt,
+			},
+			{
+				id: "installation456",
+				externalId: "T456",
+				displayName: "LEADR",
+				metadata: {
+					scopes: [
+						"links:read",
+						"links:write",
+						"links.embed:write",
+						"chat:write",
+						"users:read",
+						"users:read.email",
+					],
+				},
 				createdAt,
 				updatedAt,
 			},
@@ -72,6 +94,15 @@ describe("integration installations", () => {
 				id: "installation123",
 				teamId: "T123",
 				teamName: "Cap",
+				missingScopes: ["chat:write", "users:read", "users:read.email"],
+				createdAt,
+				updatedAt,
+			},
+			{
+				id: "installation456",
+				teamId: "T456",
+				teamName: "LEADR",
+				missingScopes: [],
 				createdAt,
 				updatedAt,
 			},
@@ -95,6 +126,35 @@ describe("integration installations", () => {
 			accessToken: 123,
 		});
 		await expect(getSlackInstallationToken("T123")).rejects.toThrow(
+			"Slack installation credentials are invalid",
+		);
+	});
+
+	it("lists decrypted Slack tokens and granted scopes for an organization", async () => {
+		integrationMocks.listIntegrationCredentials.mockResolvedValue([
+			{
+				externalId: "T123",
+				credentials: { accessToken: "xoxb-token" },
+				metadata: { scopes: ["links:read", "chat:write"] },
+			},
+		]);
+
+		await expect(listSlackInstallationAccess(organizationId)).resolves.toEqual([
+			{
+				teamId: "T123",
+				accessToken: "xoxb-token",
+				scopes: ["links:read", "chat:write"],
+			},
+		]);
+		expect(integrationMocks.listIntegrationCredentials).toHaveBeenCalledWith({
+			organizationId,
+			provider: "slack",
+		});
+
+		integrationMocks.listIntegrationCredentials.mockResolvedValue([
+			{ externalId: "T123", credentials: {}, metadata: {} },
+		]);
+		await expect(listSlackInstallationAccess(organizationId)).rejects.toThrow(
 			"Slack installation credentials are invalid",
 		);
 	});
