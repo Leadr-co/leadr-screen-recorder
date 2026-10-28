@@ -1,5 +1,6 @@
 "use client";
 
+import { buildEnv } from "@cap/env";
 import { Logo } from "@cap/ui";
 import clsx from "clsx";
 import { useDashboardContext } from "../../../Contexts";
@@ -43,14 +44,17 @@ export const WebRecorderDialogHeader = ({
 			<div className="flex items-center justify-between pb-[0.25rem]">
 				<div className="flex items-center space-x-1">
 					<Logo className="w-[92px] h-auto" />
-					<span
-						onClick={() => {
-							if (!user.isPro) setUpgradeModalOpen(true);
-						}}
-						className={planClassName}
-					>
-						{planLabel}
-					</span>
+					{buildEnv.NEXT_PUBLIC_IS_CAP && (
+						<button
+							type="button"
+							onClick={() => {
+								if (!user.isPro) setUpgradeModalOpen(true);
+							}}
+							className={planClassName}
+						>
+							{planLabel}
+						</button>
+					)}
 				</div>
 			</div>
 		</>

@@ -110,7 +110,6 @@ async function route(request: NextRequest) {
 				path.startsWith("/signup") ||
 				path.startsWith("/invite") ||
 				path.startsWith("/self-hosting") ||
-				path.startsWith("/download") ||
 				path.startsWith("/terms") ||
 				path.startsWith("/verify-otp") ||
 				path.startsWith("/embed/") ||

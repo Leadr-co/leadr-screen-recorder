@@ -7,6 +7,7 @@ import { Caps, type VideoData } from "@/app/(org)/dashboard/caps/Caps";
 
 const mocks = vi.hoisted(() => ({ mutate: vi.fn() }));
 
+vi.mock("@cap/env", () => ({ buildEnv: { NEXT_PUBLIC_IS_CAP: false } }));
 vi.mock("@cap/ui", () => ({ Button: () => null }));
 vi.mock("@fortawesome/free-solid-svg-icons", () => ({
 	faFolderPlus: {},

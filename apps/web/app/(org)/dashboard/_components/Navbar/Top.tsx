@@ -195,7 +195,7 @@ const User = () => {
 				href: "/home",
 				onClick: () => setMenuOpen(false),
 				iconClassName: "text-gray-11 group-hover:text-gray-12",
-				showCondition: true,
+				showCondition: Boolean(buildEnv.NEXT_PUBLIC_IS_CAP),
 			},
 			{
 				name: "Upgrade to Pro",
@@ -220,14 +220,14 @@ const User = () => {
 				icon: <MessageCircleMoreIcon />,
 				onClick: () => window.open("https://cap.link/discord", "_blank"),
 				iconClassName: "text-gray-11 group-hover:text-gray-12",
-				showCondition: true,
+				showCondition: Boolean(buildEnv.NEXT_PUBLIC_IS_CAP),
 			},
 			{
 				name: "Download App",
 				icon: <DownloadIcon />,
 				onClick: () => window.open("https://cap.so/download", "_blank"),
 				iconClassName: "text-gray-11 group-hover:text-gray-12",
-				showCondition: true,
+				showCondition: Boolean(buildEnv.NEXT_PUBLIC_IS_CAP),
 			},
 			{
 				name: themeLabel,
