@@ -2,72 +2,37 @@ import "@/app/globals.css";
 import { buildEnv } from "@cap/env";
 import { OpenPanelComponent } from "@openpanel/nextjs";
 import type { Metadata } from "next";
-import localFont from "next/font/local";
+import { Montserrat } from "next/font/google";
 import Script from "next/script";
 import type { PropsWithChildren } from "react";
 
-const defaultFont = localFont({
-	src: [
-		{
-			path: "../public/fonts/NeueMontreal-Bold.woff2",
-			weight: "700",
-			style: "normal",
-		},
-		{
-			path: "../public/fonts/NeueMontreal-Regular.woff2",
-			weight: "400",
-			style: "normal",
-		},
-		{
-			path: "../public/fonts/NeueMontreal-Medium.woff2",
-			weight: "500",
-			style: "normal",
-		},
-		{
-			path: "../public/fonts/NeueMontreal-MediumItalic.woff2",
-			weight: "500",
-			style: "italic",
-		},
-		{
-			path: "../public/fonts/NeueMontreal-Italic.woff2",
-			weight: "400",
-			style: "italic",
-		},
-		{
-			path: "../public/fonts/NeueMontreal-BoldItalic.woff2",
-			weight: "700",
-			style: "italic",
-		},
-	],
-	preload: false,
+const defaultFont = Montserrat({
+	subsets: ["latin"],
+	weight: ["400", "500", "600", "700"],
+	style: ["normal", "italic"],
+	display: "swap",
 });
 
+const title = "LEADR Screen Recorder";
+const description =
+	"Record your screen and share it with the LEADR team in seconds.";
+
 export const metadata: Metadata = {
-	metadataBase: new URL("https://cap.so"),
-	title: "Cap — Beautiful screen recordings, owned by you.",
-	description:
-		"Cap is the open source alternative to Loom. Lightweight, powerful, and cross-platform. Record and share in seconds.",
+	metadataBase: new URL(buildEnv.NEXT_PUBLIC_WEB_URL),
+	title,
+	description,
+	applicationName: title,
 	openGraph: {
-		title: "Cap — Beautiful screen recordings, owned by you.",
-		description:
-			"Cap is the open source alternative to Loom. Lightweight, powerful, and cross-platform. Record and share in seconds.",
+		title,
+		description,
 		type: "website",
-		url: "https://cap.so",
-		siteName: "Cap",
-		images: [
-			{
-				url: "/api/og",
-				width: 1200,
-				height: 630,
-				alt: "Cap — Beautiful screen recordings, owned by you.",
-			},
-		],
+		siteName: title,
+		images: [{ url: "/api/og", width: 1200, height: 630, alt: title }],
 	},
 	twitter: {
 		card: "summary_large_image",
-		title: "Cap — Beautiful screen recordings, owned by you.",
-		description:
-			"Cap is the open source alternative to Loom. Lightweight, powerful, and cross-platform. Record and share in seconds.",
+		title,
+		description,
 		images: ["/api/og"],
 	},
 };
@@ -97,9 +62,9 @@ export default function RootLayout({ children }: PropsWithChildren) {
 					href="/favicon-16x16.png"
 				/>
 				<link rel="manifest" href="/site.webmanifest" />
-				<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5" />
+				<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#AB2C21" />
 				<link rel="shortcut icon" href="/favicon.ico" />
-				<meta name="msapplication-TileColor" content="#da532c" />
+				<meta name="msapplication-TileColor" content="#AB2C21" />
 				<meta name="theme-color" content="#ffffff" />
 			</head>
 			<body suppressHydrationWarning>

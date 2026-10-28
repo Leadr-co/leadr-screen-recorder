@@ -3,15 +3,14 @@ import {
 	CAP_ICON_DATA_URI,
 	CAP_WORDMARK_ASPECT,
 	CAP_WORDMARK_DATA_URI,
-	CAP_WORDMARK_GAP,
 } from "@/lib/og/cap-logo";
 import { OG_MONO, OG_SANS, OG_SERIF } from "@/lib/og/fonts";
 
 export const OG_WIDTH = 1200;
 export const OG_HEIGHT = 630;
 
-export const OG_BLUE = "#4785FF";
-export const OG_BLUE_LIGHT = "#ADC9FF";
+export const OG_BLUE = "#AB2C21";
+export const OG_BLUE_LIGHT = "#F6C9C3";
 export const OG_INK = "#111111";
 export const OG_INK_SOFT = "rgba(17,17,17,0.74)";
 export const OG_INK_MUTED = "rgba(17,17,17,0.5)";
@@ -162,16 +161,13 @@ export const MeshFrame = ({
 
 // Exact mark geometry from packages/ui LogoBadge/Logo (viewBox 0 0 40 40):
 // concentric circles at (20,20), r 16 / 13 / 10. Returned as an array —
-// satori drops React fragments nested inside <svg>.
-const logoMark = () => [
-	<circle key="o" cx="20" cy="20" r="16" fill={OG_BLUE} />,
-	<circle key="m" cx="20" cy="20" r="13" fill={OG_BLUE_LIGHT} />,
-	<circle key="i" cx="20" cy="20" r="10" fill="white" />,
+const LEADR_WORDMARK_PATHS = [
+	"M1.75,1.48h11.65v52.87h32.79v9.86H1.75V1.48Z",
+	"M107.43,54.44v9.76h-47.04V1.48h45.79v9.77h-34.14v16.31h30.29v9.59h-30.29v17.3h35.39Z",
+	"M166.06,49.69h-31.36l-6.18,14.52h-12.01L144.73,1.48h11.47l28.32,62.72h-12.19l-6.27-14.52ZM162.21,40.55l-11.83-27.42-11.74,27.42h23.57Z",
+	"M197.45,1.48h27.42c20.34,0,34.23,12.54,34.23,31.36s-13.89,31.36-34.23,31.36h-27.42V1.48ZM224.33,54.35c13.98,0,23.03-8.51,23.03-21.51s-9.05-21.51-23.03-21.51h-15.23v43.01h15.23Z",
+	"M317.45,64.2l-12.81-18.37c-.81.09-1.61.09-2.42.09h-14.16v18.28h-11.65V1.48h25.81c16.49,0,26.7,8.42,26.7,22.31,0,9.5-4.84,16.48-13.35,19.8l14.43,20.61h-12.55ZM301.68,11.34h-13.62v25h13.62c10.22,0,15.5-4.66,15.5-12.54s-5.29-12.46-15.5-12.46Z",
 ];
-
-// The drawn "Cap" wordmark path from packages/ui Logo.tsx (viewBox 0 0 120 40).
-const WORDMARK_PATH =
-	"M58.416 30.448c-5.404 0-9.212-3.864-9.212-10.36 0-6.384 3.668-10.416 9.268-10.416 5.068 0 7.784 2.66 8.624 7.168l-3.808.196c-.476-2.604-2.072-4.2-4.816-4.2-3.388 0-5.488 2.828-5.488 7.252 0 4.48 2.156 7.196 5.46 7.196 2.94 0 4.508-1.708 4.956-4.564l3.808.196c-.784 4.676-3.752 7.532-8.792 7.532zm16.23-.112c-3.137 0-5.209-1.484-5.209-4.088 0-2.576 1.596-3.948 4.872-4.592l4.956-.98c0-2.1-.98-3.192-2.856-3.192-1.764 0-2.716.812-3.052 2.324l-3.668-.168c.588-3.136 2.996-4.928 6.72-4.928 4.256 0 6.44 2.24 6.44 6.216v5.432c0 .812.28 1.036.84 1.036h.476V30c-.224.056-.812.112-1.288.112-1.624 0-2.828-.588-3.136-2.436-.728 1.596-2.632 2.66-5.096 2.66zm.727-2.604c2.38 0 3.892-1.512 3.892-3.78v-.84l-3.864.784c-1.596.308-2.24.98-2.24 2.016 0 1.176.784 1.82 2.212 1.82zM86.874 34.2V15.048h3.444l.056 2.212c.868-1.652 2.52-2.548 4.48-2.548 4.256 0 6.356 3.5 6.356 7.812s-2.128 7.812-6.384 7.812c-1.904 0-3.556-.924-4.368-2.38V34.2h-3.584zm7.112-6.776c2.184 0 3.5-1.82 3.5-4.9s-1.316-4.9-3.5-4.9-3.528 1.652-3.528 4.9 1.316 4.9 3.528 4.9z";
 
 export const CapAppIcon = ({ size }: { size: number }) => (
 	<div
@@ -191,34 +187,26 @@ export const CapWordmark = ({ height = 52 }: { height?: number }) => {
 	return (
 		<div
 			style={flex({
-				alignItems: "center",
-				gap: Math.round(height * CAP_WORDMARK_GAP),
+				width,
+				height,
+				backgroundImage: `url(${CAP_WORDMARK_DATA_URI})`,
+				backgroundSize: `${width}px ${height}px`,
 			})}
-		>
-			<CapAppIcon size={height} />
-			<div
-				style={flex({
-					width,
-					height,
-					backgroundImage: `url(${CAP_WORDMARK_DATA_URI})`,
-					backgroundSize: `${width}px ${height}px`,
-				})}
-			/>
-		</div>
+		/>
 	);
 };
 
-/** The in-app logo — bare mark + wordmark, as the main window renders it. */
 const CapFullLogo = ({ height, color }: { height: number; color: string }) => (
 	<svg
 		role="img"
-		aria-label="Cap"
-		width={Math.round((height * 104) / 40)}
+		aria-label="LEADR"
+		width={Math.round((height * 331.5) / 66)}
 		height={height}
-		viewBox="0 0 104 40"
+		viewBox="0 0 331.5 66"
 	>
-		{logoMark()}
-		<path fill={color} d={WORDMARK_PATH} />
+		{LEADR_WORDMARK_PATHS.map((d) => (
+			<path key={d} fill={color} d={d} />
+		))}
 	</svg>
 );
 
@@ -720,7 +708,7 @@ export const RecorderCard = ({ width = 380 }: { width?: number }) => (
 		</div>
 		{/* logo row + mode switcher */}
 		<div style={flex({ alignItems: "center", marginTop: 4 })}>
-			<CapFullLogo height={30} color="#12161F" />
+			<CapFullLogo height={20} color="#AB2C21" />
 			<div
 				style={flex({
 					marginLeft: 8,

@@ -1,4 +1,4 @@
-import { GlassMark, GlassWordmark, useGlassLogoIds } from "./glass-logo";
+import { LeadrMark, LeadrWordmark } from "./leadr-logo";
 
 export const Logo = ({
 	className,
@@ -17,8 +17,6 @@ export const Logo = ({
 	style?: React.CSSProperties;
 	viewBoxDimensions?: `${string} ${string} ${string} ${string}`;
 }) => {
-	const ids = useGlassLogoIds();
-
 	return (
 		<div className="flex items-center">
 			<svg
@@ -28,11 +26,10 @@ export const Logo = ({
 				fill="none"
 				style={style}
 				role="img"
-				aria-label="Cap Logo"
+				aria-label="LEADR Screen Recorder"
 				className={className}
 			>
-				<GlassMark ids={ids} />
-				{!hideLogoName && <GlassWordmark ids={ids} white={white} />}
+				{hideLogoName ? <LeadrMark /> : <LeadrWordmark white={white} />}
 			</svg>
 			{showVersion && (
 				<span
