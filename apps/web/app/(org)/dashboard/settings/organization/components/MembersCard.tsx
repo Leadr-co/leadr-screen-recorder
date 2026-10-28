@@ -25,6 +25,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { removeOrganizationInvite } from "@/actions/organization/remove-invite";
 import { removeOrganizationMember } from "@/actions/organization/remove-member";
+import { sendOrganizationInvites } from "@/actions/organization/send-invites";
 import { toggleProSeat } from "@/actions/organization/toggle-pro-seat";
 import { updateOrganizationMemberRole } from "@/actions/organization/update-member-role";
 import { ConfirmationDialog } from "@/app/(org)/dashboard/_components/ConfirmationDialog";
@@ -81,6 +82,7 @@ export const MembersCard = ({ setIsInviteDialogOpen }: MembersCardProps) => {
 		email: string;
 	} | null>(null);
 	const [deletingInviteId, setDeletingInviteId] = useState<string | null>(null);
+	const [resendingEmail, setResendingEmail] = useState<string | null>(null);
 	const roleOptions = [
 		{ value: "admin", label: "Admin" },
 		{ value: "member", label: "Member" },
@@ -88,6 +90,53 @@ export const MembersCard = ({ setIsInviteDialogOpen }: MembersCardProps) => {
 	const showMemberManagerToast = () => {
 		toast.error("Only admins and owners can manage organization members");
 	};
+
+	const resendInviteMutation = useMutation({
+		mutationFn: (email: string) => {
+			if (!activeOrganization?.organization.id) {
+				throw new Error("Organization not found");
+			}
+			setResendingEmail(email);
+			return sendOrganizationInvites(
+				[email],
+				activeOrganization.organization.id,
+			);
+		},
+		onSuccess: (result, email) => {
+			setResendingEmail(null);
+			if (result.failedEmails.length > 0) {
+				toast.error(`Could not send the email to ${email}`);
+			} else if (result.skippedEmails.length > 0) {
+				toast.warning("Email is not configured on this deployment");
+			} else {
+				toast.success(`Invite email sent to ${email}`);
+			}
+			router.refresh();
+		},
+		onError: () => {
+			toast.error("An error occurred while sending the email");
+			setResendingEmail(null);
+		},
+	});
+
+	const resendButton = (email: string) => (
+		<Button
+			type="button"
+			size="xs"
+			variant="gray"
+			className="min-w-[unset] h-[28px]"
+			onClick={() => {
+				if (canManageMembers) {
+					resendInviteMutation.mutate(email);
+				} else {
+					showMemberManagerToast();
+				}
+			}}
+			disabled={!canManageMembers || resendingEmail === email}
+		>
+			{resendingEmail === email ? "Sending..." : "Resend email"}
+		</Button>
+	);
 
 	const deleteInviteMutation = useMutation({
 		mutationFn: (inviteId: string) => {
@@ -365,32 +414,33 @@ export const MembersCard = ({ setIsInviteDialogOpen }: MembersCardProps) => {
 											: "Active"}
 									</TableCell>
 									<TableCell>
-										{!memberIsOwner ? (
-											<Button
-												type="button"
-												size="xs"
-												variant="destructive"
-												className="min-w-[unset] h-[28px]"
-												onClick={() => {
-													if (canRemoveMember) {
-														handleRemoveMember({
-															id: member.id,
-															user: {
-																name: member.user.name ?? "(No Name)",
-																email: member.user.email ?? "(No Email)",
-															},
-														});
-													} else {
-														showMemberManagerToast();
-													}
-												}}
-												disabled={!canRemoveMember}
-											>
-												Remove
-											</Button>
-										) : (
-											"-"
-										)}
+										<div className="flex gap-2 items-center">
+											{resendButton(member.user.email)}
+											{!memberIsOwner ? (
+												<Button
+													type="button"
+													size="xs"
+													variant="destructive"
+													className="min-w-[unset] h-[28px]"
+													onClick={() => {
+														if (canRemoveMember) {
+															handleRemoveMember({
+																id: member.id,
+																user: {
+																	name: member.user.name ?? "(No Name)",
+																	email: member.user.email ?? "(No Email)",
+																},
+															});
+														} else {
+															showMemberManagerToast();
+														}
+													}}
+													disabled={!canRemoveMember}
+												>
+													Remove
+												</Button>
+											) : null}
+										</div>
 									</TableCell>
 								</TableRow>
 							);
@@ -414,25 +464,28 @@ export const MembersCard = ({ setIsInviteDialogOpen }: MembersCardProps) => {
 									<TableCell>-</TableCell>
 									<TableCell>Invited</TableCell>
 									<TableCell>
-										<Button
-											type="button"
-											size="xs"
-											variant="destructive"
-											onClick={() => {
-												if (canManageMembers) {
-													deleteInviteMutation.mutate(invite.id);
-												} else {
-													showMemberManagerToast();
+										<div className="flex gap-2 items-center">
+											{resendButton(invite.invitedEmail)}
+											<Button
+												type="button"
+												size="xs"
+												variant="destructive"
+												onClick={() => {
+													if (canManageMembers) {
+														deleteInviteMutation.mutate(invite.id);
+													} else {
+														showMemberManagerToast();
+													}
+												}}
+												disabled={
+													!canManageMembers || deletingInviteId === invite.id
 												}
-											}}
-											disabled={
-												!canManageMembers || deletingInviteId === invite.id
-											}
-										>
-											{deletingInviteId === invite.id
-												? "Deleting..."
-												: "Delete Invite"}
-										</Button>
+											>
+												{deletingInviteId === invite.id
+													? "Deleting..."
+													: "Delete Invite"}
+											</Button>
+										</div>
 									</TableCell>
 								</TableRow>
 							))}

@@ -22,6 +22,13 @@ import {
 } from "@/lib/permissions/roles";
 import { requireOrganizationSettingsManager } from "./authorization";
 
+type InviteDelivery = {
+	email: string;
+	inviteId: string | null;
+	created: boolean;
+	role?: AssignableOrganizationRole;
+};
+
 type OrganizationInviteInput = {
 	email: string;
 	role?: string | null;
@@ -118,7 +125,10 @@ export async function sendOrganizationInvites(
 	const inviteRecords = await db().transaction(async (tx) => {
 		const [existingInvites, existingMembers] = await Promise.all([
 			tx
-				.select({ invitedEmail: organizationInvites.invitedEmail })
+				.select({
+					id: organizationInvites.id,
+					invitedEmail: organizationInvites.invitedEmail,
+				})
 				.from(organizationInvites)
 				.where(
 					and(
@@ -138,54 +148,65 @@ export async function sendOrganizationInvites(
 				),
 		]);
 
-		const existingInviteEmails = new Set(
-			existingInvites.map((i) => i.invitedEmail.toLowerCase()),
+		const existingInviteIds = new Map(
+			existingInvites.map((i) => [i.invitedEmail.toLowerCase(), i.id]),
 		);
 
 		const existingMemberEmails = new Set(
 			existingMembers.map((m) => m.email.toLowerCase()),
 		);
 
-		const invitesToSend = validInvites.filter(
-			(invite) =>
-				!existingInviteEmails.has(invite.email) &&
-				!existingMemberEmails.has(invite.email),
-		);
+		const deliveries: InviteDelivery[] = validInvites.map((invite) => {
+			if (existingMemberEmails.has(invite.email)) {
+				return { email: invite.email, inviteId: null, created: false };
+			}
+			const existingInviteId = existingInviteIds.get(invite.email);
+			if (existingInviteId) {
+				return {
+					email: invite.email,
+					inviteId: existingInviteId,
+					created: false,
+				};
+			}
+			return {
+				email: invite.email,
+				inviteId: nanoId(),
+				created: true,
+				role: invite.role,
+			};
+		});
 
-		const records = invitesToSend.map((invite) => ({
-			id: nanoId(),
-			email: invite.email,
-			role: invite.role,
-		}));
-
-		if (records.length > 0) {
+		const newInvites = deliveries.filter((d) => d.created);
+		if (newInvites.length > 0) {
 			await tx.insert(organizationInvites).values(
-				records.map((r) => ({
-					id: r.id,
+				newInvites.map((d) => ({
+					id: d.inviteId as string,
 					organizationId: organizationId,
-					invitedEmail: r.email,
+					invitedEmail: d.email,
 					invitedByUserId: user.id,
-					role: r.role,
+					role: d.role ?? role,
 				})),
 			);
 		}
 
-		return records;
+		return deliveries;
 	});
 
+	const webUrl = serverEnv().WEB_URL;
 	const emailResults = await Promise.allSettled(
-		inviteRecords.map((record) => {
-			const inviteUrl = `${serverEnv().WEB_URL}/invite/${record.id}`;
-			return sendEmail({
+		inviteRecords.map((record) =>
+			sendEmail({
 				email: record.email,
 				subject: `Invitation to join ${organization.name} on LEADR Screen Recorder`,
 				react: OrganizationInvite({
 					email: record.email,
-					url: inviteUrl,
+					url: record.inviteId
+						? `${webUrl}/invite/${record.inviteId}`
+						: `${webUrl}/dashboard`,
 					organizationName: organization.name,
 				}),
-			});
-		}),
+			}),
+		),
 	);
 
 	const failedInvites = inviteRecords.filter((_, i) => {
@@ -195,6 +216,9 @@ export async function sendOrganizationInvites(
 		return Boolean(error && error.name !== "email_not_configured");
 	});
 	const failedEmails = failedInvites.map((r) => r.email);
+	const failedNewInviteIds = failedInvites
+		.filter((r) => r.created && r.inviteId)
+		.map((r) => r.inviteId as string);
 	const skippedEmails = inviteRecords
 		.filter((_, i) => {
 			const result = emailResults[i];
@@ -205,21 +229,16 @@ export async function sendOrganizationInvites(
 		})
 		.map((record) => record.email);
 
-	if (failedInvites.length > 0) {
+	if (failedNewInviteIds.length > 0) {
 		try {
 			await db()
 				.delete(organizationInvites)
-				.where(
-					inArray(
-						organizationInvites.id,
-						failedInvites.map((r) => r.id),
-					),
-				);
+				.where(inArray(organizationInvites.id, failedNewInviteIds));
 		} catch (cleanupError) {
 			console.error(
 				"Failed to clean up invite records after email delivery failure:",
 				{
-					failedInviteIds: failedInvites.map((r) => r.id),
+					failedInviteIds: failedNewInviteIds,
 					failedEmails,
 					error: cleanupError,
 				},
