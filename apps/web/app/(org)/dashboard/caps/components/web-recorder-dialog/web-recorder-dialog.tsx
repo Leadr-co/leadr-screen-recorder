@@ -120,10 +120,12 @@ export const WebRecorderDialog = () => {
 		selectedCameraId,
 		selectedMicId,
 		systemAudioEnabled,
+		recordingQuality,
 		setSelectedCameraId,
 		handleCameraChange,
 		handleMicChange,
 		handleSystemAudioChange,
+		handleRecordingQualityChange,
 		handleRememberDevicesChange,
 	} = useDevicePreferences({
 		open,
@@ -179,6 +181,7 @@ export const WebRecorderDialog = () => {
 		selectedMicId,
 		micEnabled,
 		systemAudioEnabled,
+		recordingQuality,
 		recordingMode,
 		selectedCameraId,
 		isProUser: user.isPro,
@@ -306,8 +309,11 @@ export const WebRecorderDialog = () => {
 								<SettingsPanel
 									open={settingsOpen}
 									rememberDevices={rememberDevices}
+									recordingQuality={recordingQuality}
+									qualityLocked={isBusy}
 									onClose={() => setSettingsOpen(false)}
 									onRememberDevicesChange={handleRememberDevicesChange}
+									onRecordingQualityChange={handleRecordingQualityChange}
 								/>
 								<HowItWorksPanel
 									open={howItWorksOpen}

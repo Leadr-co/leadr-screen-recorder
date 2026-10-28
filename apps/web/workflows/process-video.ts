@@ -160,6 +160,11 @@ function getInputExtension(rawFileKey: string): string {
 	return `.${extension}`;
 }
 
+// The media server's own default is 1080p; recordings of 1440p and 4K screens
+// keep their resolution so small text stays legible.
+const PROCESSED_VIDEO_MAX_WIDTH = 3840;
+const PROCESSED_VIDEO_MAX_HEIGHT = 2160;
+
 async function waitForRetry(delayMs: number): Promise<void> {
 	await new Promise((resolve) => setTimeout(resolve, delayMs));
 }
@@ -178,6 +183,8 @@ async function startMediaServerProcessJob(
 		inputExtension: string;
 		audioLevels?: boolean;
 		importedOriginal?: boolean;
+		maxWidth?: number;
+		maxHeight?: number;
 	},
 ): Promise<string> {
 	for (let attempt = 0; attempt < MEDIA_SERVER_START_MAX_ATTEMPTS; attempt++) {
@@ -354,6 +361,8 @@ async function processVideoOnMediaServer(
 		importedOriginal:
 			video.metadata?.loomDeferredProcessing?.rawFileKey === rawFileKey ||
 			undefined,
+		maxWidth: PROCESSED_VIDEO_MAX_WIDTH,
+		maxHeight: PROCESSED_VIDEO_MAX_HEIGHT,
 	});
 }
 

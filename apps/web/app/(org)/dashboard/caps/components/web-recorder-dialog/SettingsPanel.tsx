@@ -1,22 +1,54 @@
 "use client";
 
 import { Switch } from "@cap/ui";
+import clsx from "clsx";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeftIcon } from "lucide-react";
+import { useEffect, useState } from "react";
+import {
+	RECORDING_QUALITY_OPTIONS,
+	type RecordingQuality,
+} from "./web-recorder-constants";
 
 interface SettingsPanelProps {
 	open: boolean;
 	rememberDevices: boolean;
+	recordingQuality: RecordingQuality;
+	qualityLocked?: boolean;
 	onClose: () => void;
 	onRememberDevicesChange: (value: boolean) => void;
+	onRecordingQualityChange: (value: RecordingQuality) => void;
 }
+
+const useScreenResolution = (open: boolean) => {
+	const [resolution, setResolution] = useState<{
+		width: number;
+		height: number;
+	} | null>(null);
+
+	useEffect(() => {
+		if (!open || typeof window === "undefined") return;
+		const scale = window.devicePixelRatio || 1;
+		setResolution({
+			width: Math.round(window.screen.width * scale),
+			height: Math.round(window.screen.height * scale),
+		});
+	}, [open]);
+
+	return resolution;
+};
 
 export const SettingsPanel = ({
 	open,
 	rememberDevices,
+	recordingQuality,
+	qualityLocked = false,
 	onClose,
 	onRememberDevicesChange,
+	onRecordingQualityChange,
 }: SettingsPanelProps) => {
+	const screenResolution = useScreenResolution(open);
+
 	return (
 		<AnimatePresence mode="wait">
 			{open && (
@@ -43,6 +75,49 @@ export const SettingsPanel = ({
 						<span className="w-9 h-9" aria-hidden />
 					</div>
 					<div className="flex flex-col gap-3">
+						<div className="flex flex-col gap-3 p-4 text-left rounded-xl border border-gray-3 bg-gray-1 dark:bg-gray-3">
+							<div className="flex flex-col gap-1">
+								<p className="text-sm font-medium text-gray-12">
+									Recording quality
+								</p>
+								<p className="text-xs text-gray-10">
+									Higher settings keep small text sharp. Auto records at your
+									screen's resolution, up to 4K. Recordings never go above your
+									screen's resolution.
+								</p>
+							</div>
+							<fieldset
+								aria-label="Recording quality"
+								className="grid grid-cols-4 gap-1 p-1 rounded-lg bg-gray-3 dark:bg-gray-4"
+							>
+								{RECORDING_QUALITY_OPTIONS.map((option) => {
+									const selected = option.value === recordingQuality;
+									return (
+										<button
+											key={option.value}
+											type="button"
+											aria-pressed={selected}
+											disabled={qualityLocked}
+											onClick={() => onRecordingQualityChange(option.value)}
+											className={clsx(
+												"py-1.5 text-xs font-medium rounded-md transition-colors disabled:cursor-not-allowed disabled:opacity-60",
+												selected
+													? "bg-gray-1 text-gray-12 shadow-sm dark:bg-gray-2"
+													: "text-gray-11 hover:text-gray-12",
+											)}
+										>
+											{option.label}
+										</button>
+									);
+								})}
+							</fieldset>
+							{screenResolution && (
+								<p className="text-xs text-gray-10">
+									This screen: {screenResolution.width} ×{" "}
+									{screenResolution.height}
+								</p>
+							)}
+						</div>
 						<div className="flex gap-4 justify-between items-start p-4 text-left rounded-xl border border-gray-3 bg-gray-1 dark:bg-gray-3">
 							<div className="flex flex-col gap-1 text-left">
 								<p className="text-sm font-medium text-gray-12">

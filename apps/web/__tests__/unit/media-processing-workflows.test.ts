@@ -191,6 +191,10 @@ describe("media processing workflows", () => {
 			metadata,
 		});
 		expect(mocks.fetch).toHaveBeenCalledOnce();
+		expect(JSON.parse(mocks.fetch.mock.calls[0]?.[1].body)).toMatchObject({
+			maxWidth: 3840,
+			maxHeight: 2160,
+		});
 		expect(mocks.sleep.mock.calls).toEqual([[5_000], [10_000]]);
 		expect(mocks.remove).toHaveBeenCalledWith(payload.rawFileKey);
 	});

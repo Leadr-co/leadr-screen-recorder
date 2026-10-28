@@ -33,11 +33,34 @@ export type RecordingPipeline =
 			supportsProgressiveUpload: false;
 	  };
 
+const MIN_VIDEO_BITS_PER_SECOND = 2_500_000;
+const MAX_VIDEO_BITS_PER_SECOND = 20_000_000;
+// Screen text stays legible at ~0.08 bits per pixel per frame; browser
+// defaults (a few Mbps regardless of size) blur small fonts above 1080p.
+const SCREEN_BITS_PER_PIXEL = 0.08;
+
+export const getVideoBitsPerSecond = (dimensions: {
+	width?: number;
+	height?: number;
+	fps?: number;
+}): number | undefined => {
+	const { width, height } = dimensions;
+	if (!width || !height) return undefined;
+	const fps = dimensions.fps && dimensions.fps > 0 ? dimensions.fps : 30;
+	const bits = Math.round(width * height * fps * SCREEN_BITS_PER_PIXEL);
+	return Math.min(
+		MAX_VIDEO_BITS_PER_SECOND,
+		Math.max(MIN_VIDEO_BITS_PER_SECOND, bits),
+	);
+};
+
 export const getMediaRecorderOptions = (
 	mimeType: string,
+	videoBitsPerSecond?: number,
 ): MediaRecorderOptions & { videoKeyFrameIntervalDuration: number } => ({
 	mimeType,
 	videoKeyFrameIntervalDuration: 2_000,
+	...(videoBitsPerSecond ? { videoBitsPerSecond } : {}),
 });
 
 export const detectCapabilities = (): RecorderCapabilities => {
