@@ -2,6 +2,7 @@
 
 import type { videos as videosSchema } from "@cap/database/schema";
 import type { VideoMetadata } from "@cap/database/types";
+import { buildEnv } from "@cap/env";
 import { Button } from "@cap/ui";
 import type { SpaceRuleSource, ViewerSettingKey } from "@cap/web-backend";
 import type { ImageUpload, Video } from "@cap/web-domain";
@@ -267,9 +268,11 @@ export const Caps = ({
 				</Button>
 				<UploadCapButton size="sm" />
 				<WebRecorderDialog />
-				<ChromeRecorderButton
-					className={`${CHROME_EXTENSION_BUTTON_CLASS} font-medium`}
-				/>
+				{buildEnv.NEXT_PUBLIC_IS_CAP && (
+					<ChromeRecorderButton
+						className={`${CHROME_EXTENSION_BUTTON_CLASS} font-medium`}
+					/>
+				)}
 			</div>
 			<FoldersSection
 				title="Folders"

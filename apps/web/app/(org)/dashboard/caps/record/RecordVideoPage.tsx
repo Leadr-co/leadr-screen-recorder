@@ -1,5 +1,6 @@
 "use client";
 
+import { buildEnv } from "@cap/env";
 import { Button } from "@cap/ui";
 import { faDownload } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -53,20 +54,26 @@ export const RecordVideoPage = () => {
 							</p>
 						</div>
 						<div className="flex flex-wrap gap-3 justify-center items-center mt-4">
-							<Button
-								onClick={openDesktop}
-								className="flex relative gap-2 justify-center items-center"
-								variant="primary"
-							>
-								<FontAwesomeIcon className="size-3.5" icon={faDownload} />
-								Open LEADR Screen Recorder Desktop
-							</Button>
-							<p className="text-sm text-gray-10">or</p>
+							{buildEnv.NEXT_PUBLIC_IS_CAP && (
+								<>
+									<Button
+										onClick={openDesktop}
+										className="flex relative gap-2 justify-center items-center"
+										variant="primary"
+									>
+										<FontAwesomeIcon className="size-3.5" icon={faDownload} />
+										Open LEADR Screen Recorder Desktop
+									</Button>
+									<p className="text-sm text-gray-10">or</p>
+								</>
+							)}
 							<WebRecorderDialog />
-							<ChromeRecorderButton
-								size="sm"
-								className={`${CHROME_EXTENSION_BUTTON_CLASS} font-medium`}
-							/>
+							{buildEnv.NEXT_PUBLIC_IS_CAP && (
+								<ChromeRecorderButton
+									size="sm"
+									className={`${CHROME_EXTENSION_BUTTON_CLASS} font-medium`}
+								/>
+							)}
 						</div>
 						<FaqAccordion />
 					</div>
@@ -107,12 +114,16 @@ const FaqAccordion = () => {
 		{
 			id: "system-audio",
 			q: "Can I record system audio?",
-			a: "Browsers limit system‑wide audio capture. We recommend using LEADR Screen Recorder Desktop for best results.",
+			a: buildEnv.NEXT_PUBLIC_IS_CAP
+				? "Browsers limit system‑wide audio capture. We recommend using LEADR Screen Recorder Desktop for best results."
+				: "Chrome can include audio from a browser tab, or your whole screen on Windows, when you turn on system audio before recording.",
 		},
 		{
 			id: "install",
 			q: "Do I need to install the app?",
-			a: `No. You can record in your browser. For longer recordings, system audio, and advanced editing, use LEADR Screen Recorder Desktop. The Free plan supports up to ${freeMinutes} minutes per recording in the browser.`,
+			a: buildEnv.NEXT_PUBLIC_IS_CAP
+				? `No. You can record in your browser. For longer recordings, system audio, and advanced editing, use LEADR Screen Recorder Desktop. The Free plan supports up to ${freeMinutes} minutes per recording in the browser.`
+				: "No. Everything records right here in your browser, with nothing to install.",
 		},
 	];
 

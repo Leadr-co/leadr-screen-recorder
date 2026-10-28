@@ -60,6 +60,11 @@ describe("self-hosted proxy routes", () => {
 	it("still redirects page routes to /login", () =>
 		expectLoginRedirect("/pricing"));
 
+	it.each(["/download", "/download/windows", "/download/apple-silicon"])(
+		"keeps the stock Cap desktop download %s off a self-hosted instance",
+		(path) => expectLoginRedirect(path),
+	);
+
 	it("still redirects extension-suffixed route handlers to /login", () =>
 		expectLoginRedirect("/install-cli.sh"));
 
