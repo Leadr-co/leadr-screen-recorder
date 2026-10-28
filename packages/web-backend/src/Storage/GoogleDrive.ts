@@ -1093,6 +1093,31 @@ const ensureGoogleDriveWarningFile = ({
 		);
 	});
 
+export const getGoogleDriveUserFolderName = (user: {
+	name: string | null;
+	lastName: string | null;
+	email: string;
+}) => {
+	const fullName = [user.name, user.lastName]
+		.map((part) => part?.trim())
+		.filter(Boolean)
+		.join(" ");
+	const label = fullName ? `${fullName} (${user.email})` : user.email;
+	return label.trim() && !/\p{Cc}/u.test(label) ? label : null;
+};
+
+// The folder is found again by its object key (the user id), so the Drive
+// name is only a label for people browsing the Shared Drive.
+const resolveGoogleDriveUserFolderName = (repo: StorageRepo, userId: string) =>
+	repo.getUserForFolderName(userId as User.UserId).pipe(
+		Effect.map((user) =>
+			Option.isSome(user)
+				? (getGoogleDriveUserFolderName(user.value) ?? userId)
+				: userId,
+		),
+		Effect.orElseSucceed(() => userId),
+	);
+
 const getGoogleDriveUploadParentId = (
 	repo: StorageRepo,
 	config: GoogleDriveIntegrationConfig,
@@ -1108,12 +1133,16 @@ const getGoogleDriveUploadParentId = (
 
 		for (const folderName of folderParts) {
 			pathParts.push(folderName);
+			const name =
+				config.folderLayout === "userVideo" && pathParts.length === 1
+					? yield* resolveGoogleDriveUserFolderName(repo, folderName)
+					: folderName;
 			parentId = yield* getOrCreateGoogleDriveFolder({
 				repo,
 				config,
 				input,
 				folderPath: pathParts.join("/"),
-				name: folderName,
+				name,
 				parentId,
 				isVideoFolder:
 					pathParts.length === (config.folderLayout === "userVideo" ? 2 : 1) &&

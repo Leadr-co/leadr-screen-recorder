@@ -26,6 +26,7 @@ import {
 	testOrganizationS3Config,
 } from "@/actions/organization/storage";
 import { useDashboardContext } from "@/app/(org)/dashboard/Contexts";
+import { pickGoogleDriveFolder } from "@/lib/google-drive-picker";
 
 const defaultS3Config = {
 	provider: "aws",
@@ -227,12 +228,6 @@ export function OrganizationStorageIntegrations({
 		}
 	};
 
-	const openFolderBrowser = () => {
-		startTransition(async () => {
-			await loadFolderBrowser({ id: "root", name: "My Drive" }, []);
-		});
-	};
-
 	const openChildFolder = (folder: OrganizationGoogleDriveFolder) => {
 		startTransition(async () => {
 			await loadFolderBrowser({ id: folder.id, name: folder.name }, [
@@ -262,6 +257,46 @@ export function OrganizationStorageIntegrations({
 			setFolderBrowserOpen(false);
 		}, "Google Drive location updated");
 
+	// drive.file only reaches folders the app created or the user picked in
+	// Google's Picker, so a Shared Drive folder has to come through the Picker.
+	const chooseDriveLocation = () => {
+		if (!requirePro()) return;
+
+		startTransition(async () => {
+			try {
+				const { accessToken, apiKey, clientId } =
+					await getOrganizationGoogleDrivePickerToken(organizationId);
+				if (!apiKey) {
+					await loadFolderBrowser({ id: "root", name: "My Drive" }, []);
+					return;
+				}
+				const folder = await pickGoogleDriveFolder({
+					accessToken,
+					apiKey,
+					clientId,
+				});
+				if (folder) {
+					selectDriveFolder({
+						id: folder.id,
+						name: folder.name,
+						driveId: null,
+						driveName: null,
+					});
+				}
+			} catch (error) {
+				if (error instanceof Error && error.message === proRequiredMessage) {
+					setUpgradeModalOpen(true);
+					return;
+				}
+				toast.error(
+					error instanceof Error
+						? error.message
+						: "Failed to open Google Drive folders",
+				);
+			}
+		});
+	};
+
 	const selectCurrentDriveFolder = () =>
 		selectDriveFolder({
 			id: folderBrowserParent.id,
@@ -288,7 +323,7 @@ export function OrganizationStorageIntegrations({
 	const folderBreadcrumb = selectedFolderName
 		? `${selectedDriveName} › ${selectedFolderName}`
 		: selectedDriveName;
-	const filePathPreview = `${selectedFolderName ?? selectedDriveName} / user-id / video-id`;
+	const filePathPreview = `${selectedFolderName ?? selectedDriveName} / rep name / recording title`;
 
 	return (
 		<div className="flex flex-col gap-4">
@@ -608,7 +643,7 @@ export function OrganizationStorageIntegrations({
 											type="button"
 											size="xs"
 											variant="gray"
-											onClick={openFolderBrowser}
+											onClick={chooseDriveLocation}
 											disabled={isPending || folderBrowserLoading}
 										>
 											Change

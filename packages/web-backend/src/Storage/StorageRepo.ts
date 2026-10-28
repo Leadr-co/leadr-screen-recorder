@@ -495,6 +495,23 @@ export class StorageRepo extends Effect.Service<StorageRepo>()("StorageRepo", {
 					.pipe(Effect.map((rows) => Option.fromNullable(rows[0]))),
 		);
 
+		const getUserForFolderName = Effect.fn("StorageRepo.getUserForFolderName")(
+			(userId: User.UserId) =>
+				db
+					.use((db) =>
+						db
+							.select({
+								name: Db.users.name,
+								lastName: Db.users.lastName,
+								email: Db.users.email,
+							})
+							.from(Db.users)
+							.where(Dz.eq(Db.users.id, userId))
+							.limit(1),
+					)
+					.pipe(Effect.map((rows) => Option.fromNullable(rows[0]))),
+		);
+
 		const updateObjectFileName = Effect.fn("StorageRepo.updateObjectFileName")(
 			(object: typeof Db.storageObjects.$inferSelect, fileName: string) =>
 				db
@@ -626,6 +643,7 @@ export class StorageRepo extends Effect.Service<StorageRepo>()("StorageRepo", {
 			reserveObject,
 			getObjectByKey,
 			getVideoForNameSync,
+			getUserForFolderName,
 			updateObjectFileName,
 			listObjectsByPrefix,
 			markObjectComplete,
