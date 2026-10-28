@@ -1,5 +1,3 @@
-# syntax=docker.io/docker/dockerfile:1
-
 FROM oven/bun:1.4.4-alpine AS bun
 
 FROM node:24.22.1-alpine AS base
