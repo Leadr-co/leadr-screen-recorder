@@ -1,6 +1,7 @@
 "use server";
 
 import { db } from "@cap/database";
+import { isOrganizationCreationLocked } from "@cap/database/auth/new-user-organization";
 import { getCurrentUser } from "@cap/database/auth/session";
 import { nanoId } from "@cap/database/helpers";
 import {
@@ -18,6 +19,9 @@ import { runPromise } from "@/lib/server";
 export async function createOrganization(formData: FormData) {
 	const user = await getCurrentUser();
 	if (!user) throw new Error("Unauthorized");
+	if (isOrganizationCreationLocked()) {
+		throw new Error("New organizations are disabled on this deployment");
+	}
 
 	// Extract the name from the FormData
 	const name = formData.get("name") as string;

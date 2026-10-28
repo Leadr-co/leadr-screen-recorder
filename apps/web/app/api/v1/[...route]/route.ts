@@ -1,5 +1,6 @@
 import { createHash, createHmac } from "node:crypto";
 import { HeadBucketCommand, S3Client } from "@aws-sdk/client-s3";
+import { isOrganizationCreationLocked } from "@cap/database/auth/new-user-organization";
 import {
 	decrypt,
 	encrypt,
@@ -5637,6 +5638,12 @@ const AgentManagementHandlersLive = HttpApiBuilder.group(
 						yield* requireUserConfirmedRequest(requestId);
 						const principal = yield* Agent.AgentPrincipal;
 						yield* requireScope(principal, "organizations:manage", requestId);
+						if (isOrganizationCreationLocked()) {
+							return yield* forbidden(
+								requestId,
+								"New organizations are disabled on this deployment",
+							);
+						}
 						const name = payload.name.trim();
 						if (name.length === 0 || name.length > 255) {
 							return yield* badRequest(

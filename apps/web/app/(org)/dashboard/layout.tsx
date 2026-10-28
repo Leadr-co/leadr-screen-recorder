@@ -1,4 +1,5 @@
 import { db } from "@cap/database";
+import { isOrganizationCreationLocked } from "@cap/database/auth/new-user-organization";
 import { getCurrentUser } from "@cap/database/auth/session";
 import { organizationInvites } from "@cap/database/schema";
 import { userIsPro } from "@cap/utils";
@@ -113,6 +114,7 @@ export default async function DashboardLayout({
 					initialTheme={theme as "light" | "dark"}
 					initialSidebarCollapsed={sidebar === "true"}
 					anyNewNotifications={anyNewNotifications}
+					canCreateOrganizations={!isOrganizationCreationLocked()}
 					userPreferences={userPreferences}
 					referClicked={referClicked === "true"}
 					shareableLinkUsage={shareableLinkUsage}

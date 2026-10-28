@@ -29,6 +29,7 @@ export type SharedContext = {
 	userCapsCount: number | null;
 	toggleSidebarCollapsed: () => void;
 	anyNewNotifications: boolean;
+	canCreateOrganizations: boolean;
 	userPreferences: UserPreferences;
 	sidebarCollapsed: boolean;
 	upgradeModalOpen: boolean;

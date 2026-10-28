@@ -144,8 +144,11 @@ const AdminNavItems = ({ toggleMobileNav }: Props) => {
 	];
 
 	const [dialogOpen, setDialogOpen] = useState(false);
-	const { organizationData: orgData, activeOrganization: activeOrg } =
-		useDashboardContext();
+	const {
+		organizationData: orgData,
+		activeOrganization: activeOrg,
+		canCreateOrganizations,
+	} = useDashboardContext();
 	const formRef = useRef<HTMLFormElement | null>(null);
 	const [createLoading, setCreateLoading] = useState(false);
 	const [organizationName, setOrganizationName] = useState("");
@@ -362,16 +365,18 @@ const AdminNavItems = ({ toggleMobileNav }: Props) => {
 														</CommandItem>
 													);
 												})}
-												<DialogTrigger asChild>
-													<Button
-														variant="dark"
-														size="sm"
-														className="flex gap-1 items-center my-2 w-[90%] mx-auto text-sm"
-													>
-														<Plus className="w-3.5 h-auto" />
-														New organization
-													</Button>
-												</DialogTrigger>
+												{canCreateOrganizations && (
+													<DialogTrigger asChild>
+														<Button
+															variant="dark"
+															size="sm"
+															className="flex gap-1 items-center my-2 w-[90%] mx-auto text-sm"
+														>
+															<Plus className="w-3.5 h-auto" />
+															New organization
+														</Button>
+													</DialogTrigger>
+												)}
 											</CommandGroup>
 										</Command>
 									</PopoverContent>
