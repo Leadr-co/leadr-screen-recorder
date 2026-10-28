@@ -142,6 +142,7 @@ export async function checkHasAudioTrackViaMediaServer(
 
 export async function extractAudioViaMediaServer(
 	videoUrl: string,
+	options: { bitrate?: string } = {},
 ): Promise<Buffer> {
 	const { mediaServerUrl, mediaServerSecret } = getMediaServerConfig();
 
@@ -151,6 +152,7 @@ export async function extractAudioViaMediaServer(
 		body: JSON.stringify({
 			videoUrl,
 			stream: true,
+			...(options.bitrate && { bitrate: options.bitrate }),
 		}),
 	});
 
