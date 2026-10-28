@@ -9,7 +9,9 @@ WORKDIR /app
 COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
 COPY . .
 
-RUN --mount=type=cache,id=bun-1.4.4,target=/root/.bun/install/cache bun install --frozen-lockfile
+# Railway rejects cache mounts whose id is not "s/<service id>-<path>", so no mount here
+# https://docs.railway.com/builds/dockerfiles#cache-mounts
+RUN bun install --frozen-lockfile
 
 ARG NEXT_PUBLIC_DOCKER_BUILD=true
 ENV NEXT_PUBLIC_WEB_URL=http://localhost:3000
