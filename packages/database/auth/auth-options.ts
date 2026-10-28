@@ -380,23 +380,20 @@ export const authOptions = (ssoContext?: SsoAuthContext): NextAuthOptions => {
 
 				const allowedDomains = serverEnv().CAP_ALLOWED_SIGNUP_DOMAINS;
 				if (!allowedDomains) return true;
+				if (isEmailAllowedForSignup(userEmail, allowedDomains)) return true;
 
-				const [existingUser] = await db()
-					.select()
-					.from(users)
-					.where(eq(users.email, userEmail))
-					.limit(1);
-
-				// Only apply domain restrictions for new users, existing ones can always sign in
-				if (
-					!existingUser &&
-					!isEmailAllowedForSignup(userEmail, allowedDomains)
-				) {
-					console.warn(`Signup blocked for email domain: ${userEmail}`);
-					return false;
+				// Without CAP_ENFORCE_ALLOWED_DOMAINS the allowlist only gates new signups
+				if (!serverEnv().CAP_ENFORCE_ALLOWED_DOMAINS) {
+					const [existingUser] = await db()
+						.select()
+						.from(users)
+						.where(eq(users.email, userEmail))
+						.limit(1);
+					if (existingUser) return true;
 				}
 
-				return true;
+				console.warn(`Signup blocked for email domain: ${userEmail}`);
+				return false;
 			},
 			async session({ token, session }) {
 				if (!session.user) return session;

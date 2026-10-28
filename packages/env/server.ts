@@ -121,6 +121,9 @@ function createServerEnv() {
 				.string()
 				.optional()
 				.describe("Comma-separated list of permitted signup domains"),
+			CAP_ENFORCE_ALLOWED_DOMAINS: boolString(false).describe(
+				"Apply CAP_ALLOWED_SIGNUP_DOMAINS to existing accounts, sessions and API keys, not only to new signups",
+			),
 			CAP_BLOCKED_SIGNUP_DOMAINS: z
 				.string()
 				.optional()

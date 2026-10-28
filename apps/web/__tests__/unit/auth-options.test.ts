@@ -43,6 +43,7 @@ const env = vi.hoisted(() => ({
 	APPLE_CLIENT_SECRET: "apple-secret",
 	CAP_ALLOWED_SIGNUP_DOMAINS: undefined as string | undefined,
 	CAP_BLOCKED_SIGNUP_DOMAINS: undefined as string | undefined,
+	CAP_ENFORCE_ALLOWED_DOMAINS: false,
 	GOOGLE_CLIENT_ID: "google-client",
 	GOOGLE_CLIENT_SECRET: "google-secret",
 	NEXTAUTH_SECRET: "next-auth-secret",
@@ -139,6 +140,7 @@ describe("authOptions", () => {
 		env.OIDC_CLIENT_SECRET = undefined;
 		env.CAP_ALLOWED_SIGNUP_DOMAINS = undefined;
 		env.CAP_BLOCKED_SIGNUP_DOMAINS = undefined;
+		env.CAP_ENFORCE_ALLOWED_DOMAINS = false;
 		env.TRUSTED_PROXY_AUTH_HEADER = undefined;
 		env.TRUSTED_PROXY_AUTH_EMAIL = undefined;
 		env.TRUSTED_PROXY_AUTH_SECRET = undefined;
@@ -524,6 +526,45 @@ describe("authOptions", () => {
 				account: { provider: "google", providerAccountId: "g1", type: "oauth" },
 			}),
 		).resolves.toBe(true);
+	});
+
+	it("lets existing accounts outside the allowed domains sign in unless enforcement is on", async () => {
+		env.CAP_ALLOWED_SIGNUP_DOMAINS = "leadr.co";
+		mocks.users.push({
+			...AUTHENTICATED_USER,
+			id: "outsider",
+			email: "outsider@gmail.com",
+			name: "Outsider",
+			lastName: null,
+			image: null,
+			authSessionVersion: 0,
+		});
+		const callbacks = callbacksFor(authOptions(CONTEXT));
+		const signIn = (email: string) =>
+			callbacks.signIn({
+				user: { id: "u1", email },
+				account: { provider: "google", providerAccountId: "g1", type: "oauth" },
+			});
+
+		await expect(signIn("outsider@gmail.com")).resolves.toBe(true);
+		await expect(signIn("newcomer@gmail.com")).resolves.toBe(false);
+		await expect(signIn("rep@leadr.co")).resolves.toBe(true);
+
+		env.CAP_ENFORCE_ALLOWED_DOMAINS = true;
+		await expect(signIn("outsider@gmail.com")).resolves.toBe(false);
+		await expect(signIn("Rep@LEADR.co")).resolves.toBe(true);
+	});
+
+	it("expires sessions outside the allowed domains when enforcement is on", async () => {
+		const { encode } = await import("next-auth/jwt");
+		const secret = "next-auth-secret";
+		const token = await encode({
+			token: { id: "user-1", email: "outsider@gmail.com", sessionVersion: 0 },
+			secret,
+		});
+		env.CAP_ALLOWED_SIGNUP_DOMAINS = "leadr.co";
+		env.CAP_ENFORCE_ALLOWED_DOMAINS = true;
+		await expect(decodeSessionToken({ token, secret })).resolves.toBeNull();
 	});
 
 	it("validates the raw WorkOS profile before exposing it to the adapter", async () => {

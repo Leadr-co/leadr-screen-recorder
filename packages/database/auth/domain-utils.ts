@@ -21,15 +21,19 @@ export function isEmailAllowedForSignup(
 
 /**
  * Whether an account email is refused everywhere: sign-in, existing sessions,
- * and API keys. Reads CAP_BLOCKED_SIGNUP_DOMAINS.
+ * and API keys. Reads CAP_BLOCKED_SIGNUP_DOMAINS, and CAP_ALLOWED_SIGNUP_DOMAINS
+ * when CAP_ENFORCE_ALLOWED_DOMAINS is on.
  */
 export function isBlockedAccountEmail(
 	email: string | null | undefined,
 ): boolean {
 	if (!email) return false;
-	return isEmailBlockedFromSignup(
-		email,
-		serverEnv().CAP_BLOCKED_SIGNUP_DOMAINS,
+	const env = serverEnv();
+	if (isEmailBlockedFromSignup(email, env.CAP_BLOCKED_SIGNUP_DOMAINS))
+		return true;
+	return (
+		env.CAP_ENFORCE_ALLOWED_DOMAINS &&
+		!isEmailAllowedForSignup(email, env.CAP_ALLOWED_SIGNUP_DOMAINS)
 	);
 }
 
