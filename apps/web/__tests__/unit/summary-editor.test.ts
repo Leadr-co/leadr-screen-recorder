@@ -9,6 +9,9 @@ import { editAiContent } from "@/actions/videos/edit-ai-content";
 import { Summary } from "@/app/s/[videoId]/_components/tabs/Summary";
 import { SummaryEditor } from "@/app/s/[videoId]/_components/tabs/SummaryEditor";
 
+vi.mock("@/app/s/[videoId]/_components/tabs/BugReport", () => ({
+	BugReportPanel: () => null,
+}));
 vi.mock("@/actions/videos/edit-ai-content", () => ({ editAiContent: vi.fn() }));
 vi.mock("@cap/ui", async () => ({
 	Button: (await import("../../../../packages/ui/src/components/Button"))

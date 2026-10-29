@@ -4,6 +4,9 @@ import React, { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+vi.mock("@/app/s/[videoId]/_components/tabs/BugReport", () => ({
+	BugReportPanel: () => null,
+}));
 vi.mock("@cap/ui", () => ({
 	Button: ({ children, ...props }: React.ComponentProps<"button">) =>
 		React.createElement("button", { type: "button", ...props }, children),

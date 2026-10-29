@@ -111,6 +111,10 @@ export interface VideoMetadata {
 	 */
 	chapters?: { title: string; start: number }[];
 	chaptersManuallyEdited?: boolean;
+	/**
+	 * AI bug report drafted from the transcript on request
+	 */
+	bugReport?: VideoBugReport;
 	aiGenerationStatus?:
 		| "QUEUED"
 		| "PROCESSING"
@@ -132,6 +136,17 @@ export interface VideoMetadata {
 		state: "pending" | "accepted" | "rejected";
 		rawFileKey?: string;
 	};
+}
+
+export interface VideoBugReport {
+	title: string;
+	summary: string;
+	steps: { atSeconds: number | null; text: string }[];
+	expected: string;
+	actual: string;
+	details: string[];
+	openQuestions: string[];
+	generatedAt: string;
 }
 
 export interface VideoCallToAction {
