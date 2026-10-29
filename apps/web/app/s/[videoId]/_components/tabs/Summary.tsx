@@ -11,6 +11,7 @@ import { Edit3 } from "lucide-react";
 import { useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { formatPlayerTime } from "@/lib/player-time";
+import { BugReportPanel } from "./BugReport";
 import { type SummaryEditingState, SummaryEditor } from "./SummaryEditor";
 
 type AiGenerationStatus =
@@ -274,6 +275,13 @@ export const Summary: React.FC<SummaryProps> = ({
 						</div>
 					)}
 				</div>
+				<div className="pt-6 w-full max-w-md">
+					<BugReportPanel
+						videoId={videoId}
+						transcriptionStatus={transcriptionStatus}
+						onSeek={handleSeek}
+					/>
+				</div>
 			</div>
 		);
 	}
@@ -319,6 +327,11 @@ export const Summary: React.FC<SummaryProps> = ({
 							</div>
 						</div>
 					)}
+					<BugReportPanel
+						videoId={videoId}
+						transcriptionStatus={transcriptionStatus}
+						onSeek={handleSeek}
+					/>
 				</div>
 			</div>
 		</div>
