@@ -1,6 +1,8 @@
 DESCRIPTION >
     Session level facts derived from analytics events.
 
+TOKEN screen_recorder_app READ
+
 SCHEMA >
 	tenant_id LowCardinality(String),
 	date Date,
