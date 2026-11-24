@@ -1,4 +1,3 @@
-import { spawn } from "node:child_process";
 import { createHash, type Hash } from "node:crypto";
 import { createReadStream } from "node:fs";
 import { lstat, open, rm } from "node:fs/promises";
@@ -7,6 +6,7 @@ import { dirname, isAbsolute, join } from "node:path";
 import { Readable } from "node:stream";
 import { setTimeout as sleep } from "node:timers/promises";
 import { decodeThreadsFromEnv, PROCESS_TIMEOUT_MS } from "./media-common";
+import { spawnNode as spawn } from "./media-spawn";
 import {
 	fetchMedia,
 	MediaTransferBudgetError,

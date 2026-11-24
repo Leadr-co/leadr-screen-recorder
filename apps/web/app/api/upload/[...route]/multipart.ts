@@ -28,6 +28,13 @@ import {
 } from "@/lib/desktop-reupload-token";
 import { invalidateGoogleDriveStorageQuotaCache } from "@/lib/google-drive-storage-quota";
 import {
+	getMediaProcessingRejection,
+	isNonMediaRawUploadKey,
+	nonMediaUploadMessage,
+	toCompletedUploadContentType,
+	toStoredUploadContentType,
+} from "@/lib/media-processing-policy";
+import {
 	queueVideoTranscription,
 	shouldQueueTranscriptionAfterMultipartComplete,
 } from "@/lib/queue-video-transcription";
@@ -102,6 +109,9 @@ app.post(
 		const user = c.get("user");
 
 		const fileKey = getMultipartFileKey(user.id, body);
+		if (isNonMediaRawUploadKey(fileKey)) {
+			return c.json({ error: nonMediaUploadMessage }, 400);
+		}
 
 		const videoIdFromFileKey = fileKey.split("/")[1];
 		const videoIdRaw = "videoId" in body ? body.videoId : videoIdFromFileKey;
@@ -127,7 +137,7 @@ app.post(
 				});
 				const outputKey = createDesktopReuploadKey(video);
 				const result = yield* bucket.multipart.create(outputKey, {
-					ContentType: contentType || "video/mp4",
+					ContentType: toStoredUploadContentType(contentType || "video/mp4"),
 					CacheControl: "public, max-age=31536000, immutable",
 					Metadata: { userId: user.id, source: "cap-desktop-reupload" },
 				});
@@ -230,7 +240,9 @@ app.post(
 					const [video] = maybeVideo.value;
 					const [bucket] = yield* Storage.getAccessForVideo(video);
 
-					const finalContentType = contentType || "video/mp4";
+					const finalContentType = toStoredUploadContentType(
+						contentType || "video/mp4",
+					);
 					console.log(
 						`Creating multipart upload in bucket: ${bucket.bucketName}, content-type: ${finalContentType}, key: ${fileKey}`,
 					);
@@ -788,6 +800,7 @@ app.post(
 					);
 					console.log(`Complete response: ${JSON.stringify(result, null, 2)}`);
 
+					let storedContentType: string | undefined;
 					yield* bucket.headObject(fileKey).pipe(
 						Effect.tap((head) =>
 							isRawRecorderUpload(subpath) &&
@@ -809,11 +822,12 @@ app.post(
 									)
 								: Effect.void,
 						),
-						Effect.tap((headResult) =>
-							Effect.log(
+						Effect.tap((headResult) => {
+							storedContentType = headResult.ContentType;
+							return Effect.log(
 								`Object verification successful: ContentType=${headResult.ContentType}, ContentLength=${headResult.ContentLength}`,
-							),
-						),
+							);
+						}),
 						Effect.retry({
 							times: 3,
 							schedule: Schedule.exponential("50 millis"),
@@ -885,7 +899,10 @@ app.post(
 
 						yield* bucket
 							.copyObject(`${bucket.bucketName}/${fileKey}`, fileKey, {
-								ContentType: "video/mp4",
+								ContentType: toCompletedUploadContentType(
+									fileKey,
+									storedContentType,
+								),
 								MetadataDirective: "REPLACE",
 								...(result.ETag ? { CopySourceIfMatch: result.ETag } : {}),
 							})
@@ -939,10 +956,17 @@ app.post(
 
 					const mediaServerUrl = serverEnv().MEDIA_SERVER_URL;
 					let mediaProcessingPending = false;
+					const remuxAllowed = Effect.promise(() =>
+						getMediaProcessingRejection({
+							ownerId: user.id,
+							rawFileKey: fileKey,
+						}),
+					).pipe(Effect.map((rejection) => rejection === null));
 					if (
 						bucket.provider === "s3" &&
 						video.source.type === "webMP4" &&
-						mediaServerUrl
+						mediaServerUrl &&
+						(yield* remuxAllowed)
 					) {
 						const webhookSecret = serverEnv().MEDIA_SERVER_WEBHOOK_SECRET;
 						const inputUrl = yield* bucket.getInternalSignedObjectUrl(fileKey, {

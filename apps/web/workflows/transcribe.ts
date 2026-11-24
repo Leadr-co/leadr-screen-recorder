@@ -52,6 +52,7 @@ import {
 } from "@/lib/openai-compatible-transcription";
 import { planSegmentsAudioExtraction } from "@/lib/segments-audio";
 import { downloadConcatenatedSegments } from "@/lib/segments-audio-download";
+import { fetchStorageUrl } from "@/lib/storage-fetch";
 import {
 	getTranscriptionConfigError,
 	getTranscriptionProvider,
@@ -649,7 +650,7 @@ async function resolveVideoSourceUrl(
 		const url = await resolvedBucket
 			.getInternalSignedObjectUrl(key)
 			.pipe(runWorkflowPromise);
-		const response = await fetch(url, {
+		const response = await fetchStorageUrl(url, {
 			method: "GET",
 			headers: { range: "bytes=0-0" },
 		});
@@ -789,7 +790,7 @@ async function transcribeWithAssemblyAI(
 ): Promise<TranscriptionArtifacts> {
 	"use step";
 
-	const audioResponse = await fetch(audioUrl);
+	const audioResponse = await fetchStorageUrl(audioUrl);
 	if (!audioResponse.ok) {
 		throw new Error(
 			`Audio URL not accessible: ${audioResponse.status} ${audioResponse.statusText}`,
@@ -867,7 +868,7 @@ async function transcribeEditTranscriptWithAssemblyAI(
 ): Promise<string> {
 	"use step";
 
-	const audioResponse = await fetch(audioUrl);
+	const audioResponse = await fetchStorageUrl(audioUrl);
 	if (!audioResponse.ok) {
 		throw new Error(
 			`Audio URL not accessible: ${audioResponse.status} ${audioResponse.statusText}`,

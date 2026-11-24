@@ -65,6 +65,7 @@ import {
 	isEmailCodeSendLimited,
 	isEmailCodeVerifyLimited,
 } from "@/lib/email-code-rate-limit";
+import { toStoredUploadContentType } from "@/lib/media-processing-policy";
 import {
 	resolveMobileRequestOrigin,
 	resolveMobileWebResourceUrl,
@@ -374,7 +375,7 @@ const toMobileCapSummary = (
 						phase: row.uploadPhase ?? "uploading",
 						processingProgress: Number(row.processingProgress ?? 0),
 						processingMessage: row.processingMessage,
-						processingError: row.processingError,
+						processingError: row.processingError ? "Processing failed" : null,
 					}
 				: null,
 		ownedByCurrentUser: row.ownerId === currentUserId,
@@ -1759,7 +1760,7 @@ const getCapStatuses = Effect.fn("Mobile.getCapStatuses")(function* (
 							phase: row.phase ?? "uploading",
 							processingProgress: Number(row.processingProgress ?? 0),
 							processingMessage: row.processingMessage,
-							processingError: row.processingError,
+							processingError: row.processingError ? "Processing failed" : null,
 						}
 					: null,
 		})),
@@ -2559,11 +2560,12 @@ const createUpload = Effect.fn("Mobile.createUpload")(function* (
 		},
 	);
 	const rawFileKey = `${user.id}/${videoId}/raw-upload.${getFileExtension(input)}`;
+	const storedContentType = toStoredUploadContentType(input.contentType);
 	const upload = yield* writable.access.createUploadTarget(rawFileKey, {
-		contentType: input.contentType,
+		contentType: storedContentType,
 		method: "put",
 		fields: {
-			"Content-Type": input.contentType,
+			"Content-Type": storedContentType,
 			"x-amz-meta-userid": user.id,
 			"x-amz-meta-source": "cap-mobile-ios",
 		},
