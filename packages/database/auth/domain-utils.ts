@@ -1,6 +1,24 @@
 import { serverEnv } from "@cap/env";
 import { z } from "zod";
 
+export function normalizeEmailAddress(email: string): string {
+	return email.normalize("NFKC").trim().toLowerCase();
+}
+
+/**
+ * The email provider's identifier for an email sign-in. next-auth stores,
+ * emails and looks up accounts by this value, and the OTP rate limits key on it.
+ */
+export function normalizeSignInEmail(value: unknown): string | null {
+	if (typeof value !== "string") return null;
+	const trimmed = value.normalize("NFKC").trim();
+	if (trimmed.split("@").length !== 2 || trimmed.includes('"')) return null;
+	const [local, domain] = trimmed.toLowerCase().split("@");
+	const host = domain?.split(",")[0];
+	if (!local || !host || !host.includes(".")) return null;
+	return `${local}@${host}`;
+}
+
 export function isEmailAllowedForSignup(
 	email: string,
 	allowedDomainsConfig?: string,
@@ -10,7 +28,7 @@ export function isEmailAllowedForSignup(
 		return true;
 	}
 
-	const emailDomain = extractDomainFromEmail(email);
+	const emailDomain = extractDomainFromEmail(normalizeEmailAddress(email));
 	if (!emailDomain) {
 		return false;
 	}
@@ -32,7 +50,7 @@ export function isBlockedAccountEmail(
 	if (isEmailBlockedFromSignup(email, env.CAP_BLOCKED_SIGNUP_DOMAINS))
 		return true;
 	return (
-		env.CAP_ENFORCE_ALLOWED_DOMAINS &&
+		Boolean(env.CAP_ENFORCE_ALLOWED_DOMAINS) &&
 		!isEmailAllowedForSignup(email, env.CAP_ALLOWED_SIGNUP_DOMAINS)
 	);
 }
@@ -48,7 +66,7 @@ export function isEmailBlockedFromSignup(
 	blockedConfig?: string,
 ): boolean {
 	if (!blockedConfig || blockedConfig.trim() === "") return false;
-	const normalized = email.trim().toLowerCase();
+	const normalized = normalizeEmailAddress(email);
 	const emailDomain = extractDomainFromEmail(normalized);
 	if (!emailDomain) return false;
 	for (const raw of blockedConfig.split(",")) {
