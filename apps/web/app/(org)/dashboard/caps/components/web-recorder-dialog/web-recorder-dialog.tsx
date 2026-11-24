@@ -17,6 +17,7 @@ import {
 	type CameraPreviewWindowHandle,
 } from "./CameraPreviewWindow";
 import { CameraSelector } from "./CameraSelector";
+import { DoNotDisturbReminder } from "./DoNotDisturbReminder";
 import { HowItWorksButton } from "./HowItWorksButton";
 import { HowItWorksPanel } from "./HowItWorksPanel";
 import { InProgressRecordingBar } from "./InProgressRecordingBar";
@@ -56,12 +57,17 @@ const waitForNextFrame = () =>
 		window.requestAnimationFrame(() => resolve());
 	});
 
+// Window capture leaves out notification pop-ups; full screen is still picked
+// automatically when a camera is chosen, since only it captures the bubble.
+const DEFAULT_RECORDING_MODE: RecordingMode = "window";
+
 export const WebRecorderDialog = () => {
 	const [open, setOpen] = useState(false);
 	const [settingsOpen, setSettingsOpen] = useState(false);
 	const [howItWorksOpen, setHowItWorksOpen] = useState(false);
-	const [recordingMode, setRecordingMode] =
-		useState<RecordingMode>("fullscreen");
+	const [recordingMode, setRecordingMode] = useState<RecordingMode>(
+		DEFAULT_RECORDING_MODE,
+	);
 	const [cameraSelectOpen, setCameraSelectOpen] = useState(false);
 	const [micSelectOpen, setMicSelectOpen] = useState(false);
 	const dialogContentRef = useRef<HTMLDivElement>(null);
@@ -134,6 +140,14 @@ export const WebRecorderDialog = () => {
 	});
 
 	const micEnabled = selectedMicId !== null;
+
+	const recordingModeRef = useRef(recordingMode);
+	recordingModeRef.current = recordingMode;
+	useEffect(() => {
+		if (selectedCameraId && recordingModeRef.current === "window") {
+			setRecordingMode("fullscreen");
+		}
+	}, [selectedCameraId]);
 
 	useEffect(() => {
 		if (
@@ -230,7 +244,7 @@ export const WebRecorderDialog = () => {
 		if (!next) {
 			void resetState();
 			setSelectedCameraId(null);
-			setRecordingMode("fullscreen");
+			setRecordingMode(DEFAULT_RECORDING_MODE);
 			setSettingsOpen(false);
 			setHowItWorksOpen(false);
 		}
@@ -327,6 +341,10 @@ export const WebRecorderDialog = () => {
 									mode={recordingMode}
 									disabled={isBusy}
 									onModeChange={setRecordingMode}
+								/>
+								<DoNotDisturbReminder
+									visible={recordingMode === "fullscreen" && !isRecording}
+									onSwitchToWindow={() => setRecordingMode("window")}
 								/>
 								{screenCaptureWarning && (
 									<div className="rounded-md border border-amber-6 bg-amber-3/60 px-3 py-2 text-xs leading-snug text-amber-12">
