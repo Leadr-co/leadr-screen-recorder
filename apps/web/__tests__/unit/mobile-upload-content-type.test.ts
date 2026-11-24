@@ -190,8 +190,6 @@ describe("POST /api/mobile/uploads", () => {
 	it.each([
 		["Clip.mov", "video/quicktime", "raw-upload.mov"],
 		["Clip.mp4", "video/mp4", "raw-upload.mp4"],
-		["Screen.png", "image/png", "screen-capture.png"],
-		["Photo.jpg", "image/jpeg", "screen-capture.jpg"],
 	])(
 		"keeps the real type of %s sent as %s",
 		async (fileName, contentType, objectName) => {
@@ -214,6 +212,8 @@ describe("POST /api/mobile/uploads", () => {
 	it.each([
 		["page.html", "text/html"],
 		["drawing.svg", "image/svg+xml"],
+		["Screen.png", "image/png"],
+		["Photo.jpg", "image/jpeg"],
 	])("refuses %s sent as %s", async (fileName, contentType) => {
 		const response = await createUpload(fileName, contentType);
 
