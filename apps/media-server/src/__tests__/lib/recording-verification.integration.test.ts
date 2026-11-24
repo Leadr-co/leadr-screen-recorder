@@ -531,7 +531,7 @@ describe("encoded recording preservation", () => {
 						]),
 					).rejects.toMatchObject({ retryable: true });
 					expect(performance.now() - started).toBeLessThan(2000);
-					expect(await decoderPids(path)).toEqual([]);
+					expect(await decodersStopped(path)).toEqual([]);
 				} finally {
 					if (timer) clearTimeout(timer);
 					controller.abort();
@@ -671,7 +671,7 @@ describe("encoded recording preservation", () => {
 				timeoutMs: 1,
 			}),
 		).rejects.toThrow();
-		expect(await decoderPids(silent)).toEqual([]);
+		expect(await decodersStopped(silent)).toEqual([]);
 	});
 
 	test.each([true, false])(
@@ -2054,6 +2054,17 @@ describe("source-preserving recording mux", () => {
 	});
 });
 
+// A stopped decoder can still be exiting for a moment on a slow machine. A
+// decoder that was never stopped is still there after this wait.
+async function decodersStopped(source: string): Promise<number[]> {
+	let pids = await decoderPids(source);
+	for (let attempt = 0; attempt < 40 && pids.length; attempt++) {
+		await Bun.sleep(50);
+		pids = await decoderPids(source);
+	}
+	return pids;
+}
+
 async function decoderPids(source: string): Promise<number[]> {
 	// FFmpeg reads a remote input through the relay, which keeps its file name.
 	const input = /^https?:/.test(source)
@@ -2408,7 +2419,7 @@ describe("recording verification lifetime", () => {
 						: "Fixture pipe read failed",
 				);
 				expect(modified).toBe(true);
-				expect(await decoderPids(silent)).toEqual([]);
+				expect(await decodersStopped(silent)).toEqual([]);
 			} finally {
 				iterator.mockRestore();
 			}
@@ -2437,7 +2448,7 @@ describe("recording verification lifetime", () => {
 				).rejects.toThrow("cancelled");
 				expect(streams.length).toBe(2);
 				expect(streams.every((stream) => stream.destroyed)).toBe(true);
-				expect(await decoderPids(silent)).toEqual([]);
+				expect(await decodersStopped(silent)).toEqual([]);
 				const replacement = openSync(silent, "r");
 				try {
 					Bun.gc(true);
@@ -2480,7 +2491,7 @@ describe("recording verification lifetime", () => {
 					inspectRecordingSources(silent, silent, { timeoutMs: 2_000 }),
 				).rejects.toThrow("timed out");
 				expect(modified).toBe(true);
-				expect(await decoderPids(silent)).toEqual([]);
+				expect(await decodersStopped(silent)).toEqual([]);
 			} finally {
 				iterator.mockRestore();
 			}

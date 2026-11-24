@@ -75,12 +75,17 @@ describe("mediaProbe integration tests", () => {
 			await expectRejected(probeVideo("file:///nonexistent/path/to/video.mp4"));
 		});
 
-		test("throws error for invalid URL", async () => {
-			await expectRejected(
-				probeVideo(
-					"https://invalid-domain-that-does-not-exist.example/video.mp4",
-				),
-			);
+		// A port nobody listens on refuses at once, so the answer does not depend
+		// on how fast the build machine's resolver gives up on a missing name.
+		test("throws error for an unreachable URL", async () => {
+			const server = Bun.serve({
+				hostname: "127.0.0.1",
+				port: 0,
+				fetch: () => new Response(null, { status: 200 }),
+			});
+			const url = `http://127.0.0.1:${server.port}/video.mp4`;
+			await server.stop(true);
+			await expectRejected(probeVideo(url));
 		});
 
 		test("rejects missing remote media before starting MediaBunny workers", async () => {
@@ -453,11 +458,38 @@ describe("mediaProbe integration tests", () => {
 	});
 
 	describe("checkVideoAccessible", () => {
-		test("returns false for non-existent http URL", async () => {
-			const accessible = await checkVideoAccessible(
-				"https://invalid-domain-that-does-not-exist.example/video.mp4",
-			);
-			expect(accessible).toBe(false);
+		// A local server stands in for the missing file, so the answer does not
+		// depend on how fast the build machine's resolver gives up on a name.
+		test("returns false for a URL whose file does not exist", async () => {
+			const server = Bun.serve({
+				hostname: "127.0.0.1",
+				port: 0,
+				fetch: () => new Response("Not found", { status: 404 }),
+			});
+			try {
+				const accessible = await checkVideoAccessible(
+					`http://127.0.0.1:${server.port}/video.mp4`,
+				);
+				expect(accessible).toBe(false);
+			} finally {
+				await server.stop(true);
+			}
+		});
+
+		test("returns true for a URL whose file exists", async () => {
+			const server = Bun.serve({
+				hostname: "127.0.0.1",
+				port: 0,
+				fetch: () => new Response(null, { status: 200 }),
+			});
+			try {
+				const accessible = await checkVideoAccessible(
+					`http://127.0.0.1:${server.port}/video.mp4`,
+				);
+				expect(accessible).toBe(true);
+			} finally {
+				await server.stop(true);
+			}
 		});
 	});
 });
