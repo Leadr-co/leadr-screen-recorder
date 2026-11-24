@@ -28,6 +28,7 @@ import {
 	totalSegmentDuration,
 } from "@/lib/segment-playback";
 import { apiToHandler } from "@/lib/server";
+import { isEditSourceObjectKey } from "@/lib/video-edit-processing";
 import { CACHE_CONTROL_HEADERS } from "@/utils/helpers";
 import {
 	generateM3U8Playlist,
@@ -140,6 +141,9 @@ const resolveRawPreviewKey = (video: Video.Video) =>
 		);
 
 		if (uploadRecord?.rawFileKey) {
+			if (isEditSourceObjectKey(uploadRecord.rawFileKey)) {
+				return yield* Effect.fail(new HttpApiError.NotFound());
+			}
 			return uploadRecord.rawFileKey;
 		}
 
