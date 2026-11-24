@@ -9,6 +9,7 @@ import {
 	restoreIdleTimeoutOnFirstChunk,
 	setRequestIdleTimeout,
 } from "../lib/lifecycle";
+import { assertRemoteMediaAllowed } from "../lib/media-address-guard";
 import {
 	canAcceptNewAudioOperation as canAcceptNewProcess,
 	checkHasAudioTrack,
@@ -87,6 +88,7 @@ audio.post("/check", async (c) => {
 	if (isDraining()) return drainingResponse(c);
 
 	try {
+		await assertRemoteMediaAllowed(result.data.videoUrl);
 		const hasAudio = await checkHasAudioTrack(result.data.videoUrl);
 		return c.json({ hasAudio });
 	} catch (err) {
@@ -152,6 +154,7 @@ audio.post("/extract", async (c) => {
 	let streaming = false;
 
 	try {
+		await assertRemoteMediaAllowed(videoUrl);
 		const hasAudio = await checkHasAudioTrack(videoUrl);
 		if (!hasAudio) {
 			return c.json(
@@ -252,6 +255,7 @@ audio.post("/convert", async (c) => {
 	let streaming = false;
 
 	try {
+		await assertRemoteMediaAllowed(audioUrl);
 		const { stream, cleanup } = extractAudioStream(audioUrl, {
 			bitrate,
 			timeoutMs: 15 * 60 * 1000,
